@@ -240,7 +240,7 @@ public interface ClueDetailsConfig extends Config
 		keyName = "onlyShowMarkedClues",
 		name = "Only show marked clues in the sidebar",
 		description = "Toggle whether to only show marked clues in the sidebar",
-		position = 5
+		position = 6
 	)
 	default boolean onlyShowMarkedClues()
 	{
@@ -251,7 +251,7 @@ public interface ClueDetailsConfig extends Config
 		keyName = "highlightMarkedClues",
 		name = "Highlight marked clues",
 		description = "Toggle whether to highlight marked clues",
-		position = 6
+		position = 5
 	)
 	default boolean highlightMarkedClues()
 	{

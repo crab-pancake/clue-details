@@ -249,7 +249,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 		List<Clues> filteredClues = Arrays.stream(Clues.values())
 			.filter(config.filterListByTier())
 			.filter(config.filterListByRegion())
-			.filter(this::showOnlyMarkedClues)
+			.filter(this::filterUnmarkedClues)
 			.sorted(config.orderListBy())
 			.collect(Collectors.toList());
 
@@ -277,8 +277,9 @@ public class ClueDetailsParentPanel extends PluginPanel
 		revalidate();
 	}
 
-	public boolean showOnlyMarkedClues(Clues clue)
+	public boolean filterUnmarkedClues(Clues clue)
 	{
-		return config.onlyShowMarkedClues() && cluePreferenceManager.getPreference(clue.getClueID());
+		if (!config.onlyShowMarkedClues()) return true;
+		return cluePreferenceManager.getPreference(clue.getClueID());
 	}
 }
