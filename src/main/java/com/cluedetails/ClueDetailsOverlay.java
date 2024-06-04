@@ -27,14 +27,9 @@ package com.cluedetails;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -55,12 +50,11 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
+import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.JagexColors;
 import net.runelite.client.ui.overlay.OverlayPanel;
-import net.runelite.client.ui.overlay.OverlayUtil;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
@@ -75,20 +69,27 @@ public class ClueDetailsOverlay extends OverlayPanel
 	protected ModelOutlineRenderer modelOutlineRenderer;
 	private final ConfigManager configManager;
 
+	private final Notifier notifier;
+
 	protected Multimap<Tile, Integer> tileHighlights = ArrayListMultimap.create();
 
 	protected static final int MAX_DISTANCE = 2350;
 
 	@Inject
-	public ClueDetailsOverlay(Client client, ClueDetailsConfig config, TooltipManager tooltipManager, ModelOutlineRenderer modelOutlineRenderer, ConfigManager configManager)
+	public ClueDetailsOverlay(Client client, ClueDetailsConfig config, TooltipManager tooltipManager, ModelOutlineRenderer modelOutlineRenderer, ConfigManager configManager, Notifier notifier)
 	{
 		this.client = client;
 		this.config = config;
 		this.tooltipManager = tooltipManager;
 		this.modelOutlineRenderer = modelOutlineRenderer;
 		this.configManager = configManager;
+		this.notifier = notifier;
 
 		tileHighlights.clear();
+		if (client.getGameState() == GameState.LOGGING_IN)
+		{
+			refreshHighlights();
+		}
 	}
 
 	@Override
@@ -103,7 +104,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 			showHoveredItem();
 		}
 
-		tileHighlights.keySet().forEach(tile -> checkAllTilesForHighlighting(tile, tileHighlights.get(tile), graphics));
+		tileHighlights.keySet().forEach(tile -> checkAllTilesForHighlighting(tile, tileHighlights.get(tile)));
 
 		return super.render(graphics);
 	}
@@ -199,11 +200,13 @@ public class ClueDetailsOverlay extends OverlayPanel
 		{
 			tileHighlights.clear();
 		}
+    
+		if (event.getGameState() == GameState.LOGGED_IN)
+		{
+			addItemTiles();
+		}
 	}
-
-	// TODO: Need a on config changed to remove from list. OR each time we go to highlight check config but that seems bad
-	// TODO: Need sidebar config to only show when logged in
-
+  
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned)
 	{
@@ -211,6 +214,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 		Tile tile = itemSpawned.getTile();
 		if (shouldHighlight(item.getId()))
 		{
+			notifier.notify(config.markedClueDroppedNotification(), "A highlighted clue has dropped!");
 			tileHighlights.get(tile).add(item.getId());
 		}
 	}
@@ -221,20 +225,14 @@ public class ClueDetailsOverlay extends OverlayPanel
 		Tile tile = itemDespawned.getTile();
 		if (tileHighlights.containsKey(tile))
 		{
-			// This fails
-			for (Integer priorItem : tileHighlights.get(tile))
-			{
-				if (itemDespawned.getItem() == null) continue;
-				if (priorItem == itemDespawned.getItem().getId())
-				{
-					tileHighlights.get(tile).remove(itemDespawned.getItem().getId());
-				}
-			}
+			tileHighlights.get(tile).removeIf((i) -> i == itemDespawned.getItem().getId());
 		}
 	}
 
 	protected void addItemTiles()
 	{
+		tileHighlights.clear();
+
 		Tile[][] squareOfTiles = client.getScene().getTiles()[client.getTopLevelWorldView().getPlane()];
 
 		// Reduce the two-dimensional array into a single list for processing.
@@ -242,6 +240,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 			.flatMap(Arrays::stream)
 			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
+
 		for (Tile tile : tiles)
 		{
 			List<TileItem> items = tile.getGroundItems();
@@ -264,7 +263,17 @@ public class ClueDetailsOverlay extends OverlayPanel
 		}
 	}
 
-	private void checkAllTilesForHighlighting(Tile tile, Collection<Integer> ids, Graphics2D graphics)
+	public void refreshHighlights()
+	{
+		if (client.getGameState() != GameState.LOGGED_IN)
+		{
+			return;
+		}
+
+		addItemTiles();
+	}
+
+	private void checkAllTilesForHighlighting(Tile tile, Collection<Integer> ids)
 	{
 		Player player = client.getLocalPlayer();
 
