@@ -99,7 +99,10 @@ public class ClueDetailsPlugin extends Plugin
 			.panel(panel)
 			.build();
 
-		clientToolbar.addNavigation(navButton);
+		if (config.showSidebar())
+		{
+			clientToolbar.addNavigation(navButton);
+		}
 	}
 
 	@Override
@@ -128,6 +131,18 @@ public class ClueDetailsPlugin extends Plugin
 		if (!event.getGroup().equals(ClueDetailsConfig.class.getAnnotation(ConfigGroup.class).value()))
 		{
 			return;
+		}
+
+		if ("showSidebar".equals(event.getKey()))
+		{
+			if ("true".equals(event.getNewValue()))
+			{
+				clientToolbar.addNavigation(navButton);
+			}
+			else
+			{
+				clientToolbar.removeNavigation(navButton);
+			}
 		}
 
 		if (configEvents.contains(event.getKey()))
