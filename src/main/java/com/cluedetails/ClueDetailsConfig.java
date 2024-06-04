@@ -246,4 +246,15 @@ public interface ClueDetailsConfig extends Config
 	{
 		return false;
 	}
+
+	@ConfigItem(
+		keyName = "highlightMarkedClues",
+		name = "Highlight marked clues",
+		description = "Toggle whether to highlight marked clues",
+		position = 6
+	)
+	default boolean highlightMarkedClues()
+	{
+		return true;
+	}
 }

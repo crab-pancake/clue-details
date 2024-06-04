@@ -311,6 +311,10 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 	private void checkAllTilesForHighlighting(Tile tile, Collection<Integer> ids)
 	{
+		if (!config.highlightMarkedClues())
+		{
+			return;
+		}
 		Player player = client.getLocalPlayer();
 
 		if (player == null)
