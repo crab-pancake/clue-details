@@ -79,7 +79,7 @@ public class ClueDetailsPlugin extends Plugin
 
 	CluePreferenceManager cluePreferenceManager;
 
-	private final Collection<String> configEvents = Arrays.asList("filterListByTier", "filterListByRegion", "orderListBy");
+	private final Collection<String> configEvents = Arrays.asList("filterListByTier", "filterListByRegion", "orderListBy", "onlyShowMarkedClues");
 
 	@Override
 	protected void startUp() throws Exception
