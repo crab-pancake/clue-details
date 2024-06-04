@@ -54,6 +54,7 @@ import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.ui.JagexColors;
+import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
@@ -78,6 +79,9 @@ public class ClueDetailsOverlay extends OverlayPanel
 	@Inject
 	public ClueDetailsOverlay(Client client, ClueDetailsConfig config, TooltipManager tooltipManager, ModelOutlineRenderer modelOutlineRenderer, ConfigManager configManager, Notifier notifier)
 	{
+		setPriority(PRIORITY_HIGHEST);
+		setLayer(OverlayLayer.ABOVE_WIDGETS);
+
 		this.client = client;
 		this.config = config;
 		this.tooltipManager = tooltipManager;
@@ -97,7 +101,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 	{
 		if (client.isMenuOpen())
 		{
-			showMenuItem(graphics);
+			showMenuItem();
 		}
 		else
 		{
@@ -131,7 +135,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 		tooltipManager.add(new Tooltip(clueText));
 	}
 
-	private void showMenuItem(Graphics2D graphics)
+	private void showMenuItem()
 	{
 		MenuEntry[] currentMenuEntries = client.getMenuEntries();
 
@@ -145,13 +149,22 @@ public class ClueDetailsOverlay extends OverlayPanel
 			int menuEntryHeight = 15;
 			int headerHeight = menuEntryHeight + 3;
 
-			for (int i = 0; i < currentMenuEntries.length; i++)
+			int numberNotInMainMenu = 0;
+
+			for (int i = currentMenuEntries.length - 1; i >= 0; i--)
 			{
 				MenuEntry hoveredEntry = currentMenuEntries[i];
 
-				if (!isTakeClue(hoveredEntry)) continue;
+				int realPos = currentMenuEntries.length - (i + numberNotInMainMenu) - 1;
 
-				int realPos = currentMenuEntries.length - i - 1;
+				if (hoveredEntry.getParent() != null)
+				{
+					numberNotInMainMenu++;
+					continue;
+				}
+
+				if (!isTakeOrMarkClue(hoveredEntry)) continue;
+
 				int entryTopY = menuY + headerHeight + realPos * menuEntryHeight;
 				int entryBottomY = entryTopY + menuEntryHeight;
 
@@ -167,13 +180,24 @@ public class ClueDetailsOverlay extends OverlayPanel
 		}
 	}
 
-	private boolean isTakeClue(MenuEntry entry)
+	public boolean isTakeClue(MenuEntry entry)
 	{
 		String target = entry.getTarget();
 		String option = entry.getOption();
 		MenuAction type = entry.getType();
 
 		return type == MenuAction.GROUND_ITEM_THIRD_OPTION && target.contains("Clue scroll") && option.equals("Take");
+	}
+
+	public boolean isTakeOrMarkClue(MenuEntry entry)
+	{
+		String target = entry.getTarget();
+		String option = entry.getOption();
+		MenuAction type = entry.getType();
+
+		return target.contains("Clue scroll") && (
+			(type == MenuAction.GROUND_ITEM_THIRD_OPTION && option.equals("Take")) ||
+				(type == MenuAction.RUNELITE && (option.equals("Unmark") || option.equals("Mark"))));
 	}
 
 	private boolean shouldHighlight(int id)

@@ -32,6 +32,9 @@ import java.util.Collection;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.KeyCode;
+import net.runelite.api.MenuAction;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -148,6 +151,32 @@ public class ClueDetailsPlugin extends Plugin
 		if (configEvents.contains(event.getKey()))
 		{
 			panel.refresh();
+		}
+	}
+
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		final boolean hotKeyPressed = client.isKeyPressed(KeyCode.KC_SHIFT);
+		if (hotKeyPressed && event.getTarget().contains("Clue scroll"))
+		{
+			if (!infoOverlay.isTakeClue(event.getMenuEntry()))
+			{
+				return;
+			}
+
+			boolean isMarked = cluePreferenceManager.getPreference(event.getIdentifier());
+
+			client.createMenuEntry(-1)
+				.setOption(isMarked ? "Unmark" : "Mark")
+				.setTarget(event.getTarget())
+				.setIdentifier(event.getIdentifier())
+				.setType(MenuAction.RUNELITE)
+				.onClick(e ->
+				{
+					boolean currentValue = cluePreferenceManager.getPreference(event.getIdentifier());
+					cluePreferenceManager.savePreference(event.getIdentifier(), !currentValue);
+				});
 		}
 	}
 }
