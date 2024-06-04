@@ -209,7 +209,6 @@ public class DynamicPaddedGridLayout extends GridLayout
 			}
 		}
 
-
 		for (int i = 0; i < numRows; i++)
 		{
 			int rowHeight = h[i];

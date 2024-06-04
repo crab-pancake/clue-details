@@ -53,7 +53,6 @@ public class ClueSelectLabel extends JLabel
 	private static final Border UNSELECTED_BORDER = BorderFactory
 		.createEmptyBorder(5, 10, 5, 10);
 
-
 	public ClueSelectLabel(CluePreferenceManager cluePreferenceManager, Clues clue)
 	{
 		this.cluePreferenceManager = cluePreferenceManager;

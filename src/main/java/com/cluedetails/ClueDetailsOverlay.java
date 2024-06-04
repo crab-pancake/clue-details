@@ -125,7 +125,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		MenuEntry menuEntry = menuEntries[last];
 
-		if (!isTakeClue(menuEntry))
+		if (!isTakeClue(menuEntry) && !isReadClue(menuEntry))
 		{
 			return;
 		}
@@ -163,7 +163,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 					continue;
 				}
 
-				if (!isTakeOrMarkClue(hoveredEntry)) continue;
+				if (!isTakeOrMarkClue(hoveredEntry) && !isReadClue(hoveredEntry)) continue;
 
 				int entryTopY = menuY + headerHeight + realPos * menuEntryHeight;
 				int entryBottomY = entryTopY + menuEntryHeight;
@@ -200,6 +200,13 @@ public class ClueDetailsOverlay extends OverlayPanel
 				(type == MenuAction.RUNELITE && (option.equals("Unmark") || option.equals("Mark"))));
 	}
 
+	public boolean isReadClue(MenuEntry entry)
+	{
+		String target = entry.getTarget();
+		String option = entry.getOption();
+		return target.contains("Clue scroll") && option.equals("Read");
+	}
+
 	private boolean shouldHighlight(int id)
 	{
 		String shouldHighlight = configManager.getConfiguration("clue-details-highlights", String.valueOf(id));
@@ -208,7 +215,12 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 	private String getText(MenuEntry menuEntry)
 	{
-		Clues matchingClue = Clues.get(menuEntry.getIdentifier());
+		int scrollID = menuEntry.getIdentifier();
+		if (isReadClue(menuEntry))
+		{
+			scrollID = menuEntry.getItemId();
+		}
+		Clues matchingClue = Clues.get(scrollID);
 		if (matchingClue == null)
 		{
 			return "Can't determine clue.";

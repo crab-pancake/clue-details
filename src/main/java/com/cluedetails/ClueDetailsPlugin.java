@@ -160,22 +160,28 @@ public class ClueDetailsPlugin extends Plugin
 		final boolean hotKeyPressed = client.isKeyPressed(KeyCode.KC_SHIFT);
 		if (hotKeyPressed && event.getTarget().contains("Clue scroll"))
 		{
-			if (!infoOverlay.isTakeClue(event.getMenuEntry()))
+			if (!infoOverlay.isTakeClue(event.getMenuEntry()) && !infoOverlay.isReadClue(event.getMenuEntry()))
 			{
 				return;
 			}
 
-			boolean isMarked = cluePreferenceManager.getPreference(event.getIdentifier());
+			int identifier = event.getIdentifier();
+			if (infoOverlay.isReadClue(event.getMenuEntry()))
+			{
+				identifier = event.getMenuEntry().getItemId();
+			}
+
+			boolean isMarked = cluePreferenceManager.getPreference(identifier);
 
 			client.createMenuEntry(-1)
 				.setOption(isMarked ? "Unmark" : "Mark")
 				.setTarget(event.getTarget())
-				.setIdentifier(event.getIdentifier())
+				.setIdentifier(identifier)
 				.setType(MenuAction.RUNELITE)
 				.onClick(e ->
 				{
-					boolean currentValue = cluePreferenceManager.getPreference(event.getIdentifier());
-					cluePreferenceManager.savePreference(event.getIdentifier(), !currentValue);
+					boolean currentValue = cluePreferenceManager.getPreference(e.getIdentifier());
+					cluePreferenceManager.savePreference(e.getIdentifier(), !currentValue);
 				});
 		}
 	}

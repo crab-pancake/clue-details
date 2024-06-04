@@ -24,7 +24,6 @@
  */
 package com.cluedetails.filters;
 
-
 public enum ClueTier
 {
 	SHOW_ALL,
