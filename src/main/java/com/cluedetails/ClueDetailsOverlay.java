@@ -345,9 +345,9 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 			modelOutlineRenderer.drawOutline(
 				tile.getItemLayer(),
-				10,
+				config.outlineWidth(),
 				JagexColors.CHAT_PUBLIC_TEXT_OPAQUE_BACKGROUND,
-				10);
+				config.highlightFeather());
 		}
 	}
 }

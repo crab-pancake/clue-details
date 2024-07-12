@@ -257,4 +257,26 @@ public interface ClueDetailsConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "highlightFeather",
+			name = "Highlighted feathering",
+			description = "Configure the feathering of highlighted clues",
+			position = 5
+	)
+	default int highlightFeather()
+	{
+		return 10;
+	}
+
+	@ConfigItem(
+			keyName = "outlineWidth",
+			name = "Highlighted outline width",
+			description = "Configure the outline width of highlighted clues",
+			position = 6
+	)
+	default int outlineWidth()
+	{
+		return 4;
+	}
 }
