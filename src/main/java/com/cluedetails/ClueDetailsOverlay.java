@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.Menu;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Perspective;
@@ -115,7 +116,8 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 	private void showHoveredItem()
 	{
-		MenuEntry[] menuEntries = client.getMenuEntries();
+		Menu menu = client.getMenu();
+		MenuEntry[] menuEntries = menu.getMenuEntries();
 		int last = menuEntries.length - 1;
 
 		if (last < 0)
@@ -137,14 +139,15 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 	private void showMenuItem()
 	{
-		MenuEntry[] currentMenuEntries = client.getMenuEntries();
+		Menu menu = client.getMenu();
+		MenuEntry[] currentMenuEntries = menu.getMenuEntries();
 
 		if (currentMenuEntries != null)
 		{
 			Point mousePosition = client.getMouseCanvasPosition();
-			int menuX = client.getMenuX();
-			int menuY = client.getMenuY();
-			int menuWidth = client.getMenuWidth();
+			int menuX = menu.getMenuX();
+			int menuY = menu.getMenuY();
+			int menuWidth = menu.getMenuWidth();
 
 			int menuEntryHeight = 15;
 			int headerHeight = menuEntryHeight + 3;
@@ -156,12 +159,6 @@ public class ClueDetailsOverlay extends OverlayPanel
 				MenuEntry hoveredEntry = currentMenuEntries[i];
 
 				int realPos = currentMenuEntries.length - (i + numberNotInMainMenu) - 1;
-
-				if (hoveredEntry.getParent() != null)
-				{
-					numberNotInMainMenu++;
-					continue;
-				}
 
 				if (!isTakeOrMarkClue(hoveredEntry) && !isReadClue(hoveredEntry)) continue;
 
