@@ -25,3 +25,8 @@ As an optional toggle in the plugin's settings, you can also make it so the actu
 
 You can also edit the clue hints shown to you. In the sidebar, right-click the clue hint you want to change. Input the next text you want shown for it, and then submit. It will now be what is shown to you for the specific clue.
 
+## Import/Export clue descriptions
+
+You can share your edited clue descriptions, or import clue descriptions from someone else, by right-clicking the 'Clue Details' text at the top of the sidebar.
+
+![Screenshot 2024-09-01 231220](https://github.com/user-attachments/assets/53e16004-d64e-4a1d-a0c8-66ae5e9510be)
