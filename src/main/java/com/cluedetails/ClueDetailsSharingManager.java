@@ -41,7 +41,6 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
@@ -146,12 +145,12 @@ public class ClueDetailsSharingManager
 		}
 
 		chatboxPanelManager.openTextMenuInput("Are you sure you want to import " + importClueDetails.size() + " clue details?")
-			.option("Yes", () -> importGroundMarkers(importClueDetails))
+			.option("Yes", () -> importClueDetails(importClueDetails))
 			.option("No", Runnables.doNothing())
 			.build();
 	}
 
-	private void importGroundMarkers(Collection<ClueIdToText> importPoints)
+	private void importClueDetails(Collection<ClueIdToText> importPoints)
 	{
 		for (ClueIdToText importPoint : importPoints)
 		{
