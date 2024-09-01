@@ -78,6 +78,9 @@ public class ClueDetailsPlugin extends Plugin
 	private ChatboxPanelManager chatboxPanelManager;
 
 	@Inject
+	public ClueDetailsSharingManager clueDetailsSharingManager;
+
+	@Inject
 	ConfigManager configManager;
 
 	ClueDetailsParentPanel panel;
@@ -98,7 +101,7 @@ public class ClueDetailsPlugin extends Plugin
 
 		final BufferedImage icon = ImageUtil.loadImageResource(ClueDetailsPlugin.class, "/icon.png");
 
-		panel = new ClueDetailsParentPanel(configManager, cluePreferenceManager, config, chatboxPanelManager);
+		panel = new ClueDetailsParentPanel(configManager, cluePreferenceManager, config, chatboxPanelManager, clueDetailsSharingManager);
 		navButton = NavigationButton.builder()
 			.tooltip("Clue Details")
 			.icon(icon)
