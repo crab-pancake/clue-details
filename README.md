@@ -16,3 +16,12 @@ You can also easily mark and unmark clues by shift-clicking one already on the f
 ![Screenshot 2024-06-04 180946](https://github.com/Zoinkwiz/clue-regions/assets/29153234/4e1d5fc9-33ac-4558-94bf-ca3beae1d0a2)
 
 As the hints appear if you hover over the menu option for a clue, it can make it easier to identify which clue is which in a big stack of clues.
+
+As an optional toggle in the plugin's settings, you can also make it so the actual text of the clue item is adjusted, so you don't even need to hover for details.
+
+![Screenshot 2024-09-01 221305](https://github.com/user-attachments/assets/72685ba5-f441-4cac-b18c-6cc0ddf42d98)
+
+## Editing clue hints
+
+You can also edit the clue hints shown to you. In the sidebar, right-click the clue hint you want to change. Input the next text you want shown for it, and then submit. It will now be what is shown to you for the specific clue.
+
