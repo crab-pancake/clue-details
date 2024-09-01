@@ -83,7 +83,7 @@ public class ClueDetailsPlugin extends Plugin
 	@Inject
 	ConfigManager configManager;
 
-	ClueDetailsParentPanel panel;
+	public ClueDetailsParentPanel panel;
 
 	NavigationButton navButton;
 

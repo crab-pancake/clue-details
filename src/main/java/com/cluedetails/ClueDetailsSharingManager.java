@@ -145,7 +145,7 @@ public class ClueDetailsSharingManager
 			return;
 		}
 
-		chatboxPanelManager.openTextMenuInput("Are you sure you want to import " + importClueDetails.size() + " ground markers?")
+		chatboxPanelManager.openTextMenuInput("Are you sure you want to import " + importClueDetails.size() + " clue details?")
 			.option("Yes", () -> importGroundMarkers(importClueDetails))
 			.option("No", Runnables.doNothing())
 			.build();
@@ -159,6 +159,7 @@ public class ClueDetailsSharingManager
 		}
 
 		sendChatMessage(importPoints.size() + " clue details were imported from the clipboard.");
+		plugin.panel.refresh();
 	}
 
 	private void sendChatMessage(final String message)
