@@ -27,7 +27,6 @@ package com.cluedetails;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -35,14 +34,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
 import net.runelite.api.Menu;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
@@ -165,8 +163,17 @@ public class ClueDetailsOverlay extends OverlayPanel
 				{
 					MenuEntry hoveredEntry = currentMenuEntries[i];
 					Clues clue = Clues.get(hoveredEntry.getIdentifier());
-					if (!isTakeOrMarkClue(hoveredEntry)) continue;
-					hoveredEntry.setTarget("<col=ff9146>" + clue.getDisplayText(configManager) + "<col=FFA07A>");
+					if (clue == null || !isTakeOrMarkClue(hoveredEntry)) continue;
+					String regex = "Clue scroll \\(.*?\\)";
+
+					// Compile the pattern
+					Pattern pattern = Pattern.compile(regex);
+					Matcher matcher = pattern.matcher(hoveredEntry.getTarget());
+
+					// Replace the matched text with the new text
+					String newText = matcher.replaceAll(clue.getDisplayText(configManager));
+
+					hoveredEntry.setTarget(newText);
 				}
 			}
 
