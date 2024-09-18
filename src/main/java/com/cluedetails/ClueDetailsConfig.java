@@ -304,6 +304,18 @@ public interface ClueDetailsConfig extends Config
 	String overlaysSection = "Overlays";
 
 	@ConfigItem(
+		keyName = "showHoverText",
+		name = "Show hover text",
+		description = "Toggle whether to hide tooltips on clue hover",
+		section = overlaysSection,
+		position = 0
+	)
+	default boolean showHoverText()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "showInventoryClueTags",
 		name = "Show clue tags",
 		description = "Toggle whether to show clue details as item tags",
