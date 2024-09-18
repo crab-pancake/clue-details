@@ -178,6 +178,15 @@ public interface ClueDetailsConfig extends Config
 		}
 	}
 
+	enum ClueTagLocation
+	{
+		SPLIT(true, "Split"),
+		TOP(false, "Top"),
+		BOTTOM(false, "Bottom");
+
+        ClueTagLocation(Object selected, String displayName) {}
+	}
+
 	@ConfigItem(
 		keyName = "showSidebar",
 		name = "Show sidebar",
@@ -228,7 +237,7 @@ public interface ClueDetailsConfig extends Config
 		return ClueOrdering.TIER;
 	}
 
-	@ConfigSection(name = "Marked Clues", description = "Options that effect marked clues", position = 3, closedByDefault = false)
+	@ConfigSection(name = "Marked Clues", description = "Options that effect marked clues", position = 3)
 	String markedCluesSection = "Marked Clues";
 
 	@ConfigItem(
@@ -291,7 +300,7 @@ public interface ClueDetailsConfig extends Config
 		return 4;
 	}
 
-	@ConfigSection(name = "Overlays", description = "Options that effect overlays", position = 4, closedByDefault = false)
+	@ConfigSection(name = "Overlays", description = "Options that effect overlays", position = 4)
 	String overlaysSection = "Overlays";
 
 	@ConfigItem(
@@ -307,11 +316,35 @@ public interface ClueDetailsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "clueTagLocation",
+		name = "Clue tag location",
+		description = "Configures where on the clue item to draw tags",
+		section = overlaysSection,
+		position = 2
+	)
+	default ClueTagLocation clueTagLocation()
+	{
+		return ClueTagLocation.SPLIT;
+	}
+
+	@ConfigItem(
+			keyName = "clueTagSplit",
+			name = "Clue tag split sequence",
+			description = "Character sequence on which the tag will be split",
+			section = overlaysSection,
+			position = 3
+	)
+	default String clueTagSplit()
+	{
+		return ": ";
+	}
+
+	@ConfigItem(
 		keyName = "showInventoryCluesOverlay",
 		name = "Show clues overlay",
 		description = "Toggle whether to show an overlay with details on all clues in your inventory",
 		section = overlaysSection,
-		position = 2
+		position = 4
 	)
 	default boolean showInventoryCluesOverlay()
 	{
@@ -323,7 +356,7 @@ public interface ClueDetailsConfig extends Config
 		name = "Change clue item text",
 		description = "Toggle whether to make the clue item text be the hint or the normal text",
 		section = overlaysSection,
-		position = 3
+		position = 5
 	)
 	default boolean changeClueText()
 	{
