@@ -59,6 +59,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.ui.JagexColors;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPanel;
+import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
@@ -84,6 +85,9 @@ public class ClueDetailsOverlay extends OverlayPanel
 	{
 		setPriority(PRIORITY_HIGHEST);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
+		setDragTargetable(false);
+		setPosition(OverlayPosition.TOOLTIP);
+
 
 		this.client = client;
 		this.config = config;
@@ -212,11 +216,11 @@ public class ClueDetailsOverlay extends OverlayPanel
 					int viewportWidth = client.getViewportWidth();
 					if (menuX + menuWidth + infoPanelWidth > viewportWidth)
 					{
-						panelComponent.setPreferredLocation(new java.awt.Point(menuX - (int) infoPanelWidth, entryTopY - menuEntryHeight));
+						panelComponent.setPreferredLocation(new java.awt.Point(menuX - (int) infoPanelWidth, entryTopY));
 					}
 					else
 					{
-						panelComponent.setPreferredLocation(new java.awt.Point(menuX + menuWidth, entryTopY - menuEntryHeight));
+						panelComponent.setPreferredLocation(new java.awt.Point(menuX + menuWidth, entryTopY));
 					}
 
 					break;
