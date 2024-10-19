@@ -468,7 +468,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 			{
 				Clues clue = item.getClue();
 				List<String> keywords = new ArrayList<>();
-				keywords.add(clue.getDisplayText(configManager).toLowerCase());
+				keywords.add(clue.getDetail(configManager).toLowerCase());
 				keywords.add(Integer.toString(clue.getClueID()));
 
 				boolean matches = Arrays.stream(searchTerms)

@@ -135,7 +135,7 @@ public class ClueTableCellEditor extends AbstractCellEditor implements TableCell
 		ListItem item = (ListItem) value;
 		clue = item.getClue();
 
-		String displayText = clue.getDisplayText(configManager);
+		String displayText = clue.getDetail(configManager);
 		nameInput.setText(displayText);
 		nameInput.getTextField().selectAll();
 
