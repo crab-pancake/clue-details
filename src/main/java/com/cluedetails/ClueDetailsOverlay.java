@@ -167,16 +167,14 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		if (currentMenuEntries == null) return;
 
-		List<MenuEntryAndPos> entriesByTile = new ArrayList<>();
-
 		//If on floor tile
 		if (Arrays.stream(currentMenuEntries).noneMatch(this::isTakeClue))
 		{
 			return;
 		}
 
-		entriesByTile = getEntriesByTile(currentMenuEntries);
-		
+		List<MenuEntryAndPos> entriesByTile = getEntriesByTile(currentMenuEntries);
+
 		if (config.changeClueText() && entriesByTile.isEmpty())
 		{
 			changeFloorText(entriesByTile);
