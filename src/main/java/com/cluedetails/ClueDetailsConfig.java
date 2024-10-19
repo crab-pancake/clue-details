@@ -38,7 +38,6 @@ import net.runelite.client.config.*;
 @ConfigGroup("clue-details")
 public interface ClueDetailsConfig extends Config
 {
-	String CLUE_DETAILS_CONFIG = "clue-details-hidden";
 	enum ClueOrdering implements Comparator<Clues>
 	{
 		/**

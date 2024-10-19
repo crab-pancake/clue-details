@@ -30,7 +30,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import net.runelite.api.ItemID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.config.ConfigManager;

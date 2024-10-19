@@ -30,13 +30,11 @@ public class Zone
 {
 	private final int x;
 	private final int y;
-	private final int plane;
 
 	public Zone(WorldPoint wp)
 	{
 		x = wp.getX() / 8;
 		y = wp.getY() / 8;
-		plane = wp.getPlane();
 	}
 
 	public int maxDistanceTo(Zone zone)

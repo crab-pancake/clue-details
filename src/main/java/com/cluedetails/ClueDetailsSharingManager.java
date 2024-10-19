@@ -51,8 +51,6 @@ import net.runelite.client.menus.MenuManager;
 public class ClueDetailsSharingManager
 {
 	private final ClueDetailsPlugin plugin;
-	private final Client client;
-	private final MenuManager menuManager;
 	private final ChatMessageManager chatMessageManager;
 	private final ChatboxPanelManager chatboxPanelManager;
 	private final Gson gson;
@@ -60,12 +58,10 @@ public class ClueDetailsSharingManager
 	private final ConfigManager configManager;
 
 	@Inject
-	private ClueDetailsSharingManager(ClueDetailsPlugin plugin, Client client, MenuManager menuManager,
-									ChatMessageManager chatMessageManager, ChatboxPanelManager chatboxPanelManager, Gson gson, ConfigManager configManager)
+	private ClueDetailsSharingManager(ClueDetailsPlugin plugin, ChatMessageManager chatMessageManager, ChatboxPanelManager chatboxPanelManager,
+	                                  Gson gson, ConfigManager configManager)
 	{
 		this.plugin = plugin;
-		this.client = client;
-		this.menuManager = menuManager;
 		this.chatMessageManager = chatMessageManager;
 		this.chatboxPanelManager = chatboxPanelManager;
 		this.gson = gson;

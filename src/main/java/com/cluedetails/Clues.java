@@ -29,7 +29,6 @@ import com.cluedetails.filters.OrRequirement;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import net.runelite.api.ItemID;

@@ -91,7 +91,6 @@ public class ClueDetailsOverlay extends OverlayPanel
 		setDragTargetable(false);
 		setPosition(OverlayPosition.TOOLTIP);
 
-
 		this.client = client;
 		this.config = config;
 		this.tooltipManager = tooltipManager;
@@ -364,7 +363,6 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		return null;
 	}
-
 
 	private String getTextForTrackedClue(MenuEntryAndPos entry)
 	{
