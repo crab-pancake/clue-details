@@ -158,6 +158,8 @@ public class ClueInventoryManager
 			clueIds.add(Clues.forTextGetId(clueText));
 		}
 
+		if (clueIds.get(0) == null) return;
+
 		Set<Integer> itemIDs = trackedCluesInInventory.keySet();
 		for (Integer itemID : itemIDs)
 		{

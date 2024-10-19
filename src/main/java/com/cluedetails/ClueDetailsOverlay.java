@@ -145,13 +145,14 @@ public class ClueDetailsOverlay extends OverlayPanel
 		}
 
 		MenuEntry menuEntry = menuEntries[last];
+		MenuEntryAndPos menuEntryAndPos = new MenuEntryAndPos(menuEntry, last, 0);
 
 		if (!isTakeClue(menuEntry) && !isReadClue(menuEntry))
 		{
 			return;
 		}
 
-		String clueText = getText(menuEntry, 0);
+		String clueText = getText(menuEntryAndPos);
 
 		if (clueText == null) return;
 		// tooltip only supports </br> for multiline strings
@@ -166,161 +167,144 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		if (currentMenuEntries == null) return;
 
-		Map<WorldPoint, List<MenuEntry>> entriesByTile = new HashMap<>();
+		List<MenuEntryAndPos> entriesByTile = new ArrayList<>();
+
+		//If on floor tile
 		if (Arrays.stream(currentMenuEntries).anyMatch(this::isTakeClue))
 		{
 			entriesByTile = getEntriesByTile(currentMenuEntries);
 		}
 
+		if (config.changeClueText() && entriesByTile.isEmpty())
+		{
+			changeFloorText(entriesByTile);
+		}
+
+		if (config.showHoverText())
+		{
+			addTooltip(entriesByTile);
+		}
+	}
+
+	private void changeFloorText(List<MenuEntryAndPos> entriesByTile)
+	{
+		// Change text of actual clue
+		for (MenuEntryAndPos entryAndPos : entriesByTile)
+		{
+			MenuEntry menuEntry = entryAndPos.getMenuEntry();
+			String newText = getText(entryAndPos);
+			if (newText == null || !isTakeOrMarkClue(menuEntry)) continue;
+			String regex = "Clue scroll \\(.*?\\)";
+
+			// Compile the pattern
+			Pattern pattern = Pattern.compile(regex);
+			Matcher matcher = pattern.matcher(menuEntry.getTarget());
+
+			// Handle master three-step cryptic
+			String[] newTexts = newText.split("<br>");
+
+			// TODO: Text doesn't update after details changed
+			// TODO: Doesn't update when torn parts obtained
+			if (newTexts.length > 1)
+			{
+				Menu submenu = menuEntry.createSubMenu();
+
+				for (String text : newTexts)
+				{
+					submenu.createMenuEntry(-1)
+						.setOption(text)
+						.setType(MenuAction.RUNELITE);
+				}
+				newText = "Three-step (master)";
+			}
+			// Replace the matched text with the new text
+			String newTarget = matcher.replaceAll(newText);
+
+			menuEntry.setTarget(newTarget);
+		}
+	}
+
+	private void addTooltip(List<MenuEntryAndPos> relevantMenuEntries)
+	{
 		Point mousePosition = client.getMouseCanvasPosition();
-		int menuX = menu.getMenuX();
-		int menuY = menu.getMenuY();
-		int menuWidth = menu.getMenuWidth();
+		int menuX = client.getMenu().getMenuX();
+		int menuY = client.getMenu().getMenuY();
+		int menuWidth = client.getMenu().getMenuWidth();
 
 		int menuEntryHeight = 15;
 		int headerHeight = menuEntryHeight + 3;
 
-		if (config.changeClueText())
+		if (mousePosition.getX() < menuX || mousePosition.getX() > menuX + menuWidth) return;
+
+		int posInMenuY = (Math.round(mousePosition.getY()) - menuY - headerHeight) / menuEntryHeight;
+		int entryTopY = menuY + headerHeight + posInMenuY * menuEntryHeight;
+
+		Optional<MenuEntryAndPos> entry = relevantMenuEntries.stream()
+			.filter(menuEntryAndPos -> menuEntryAndPos.getPosInMenu() == posInMenuY)
+			.findFirst();
+		if (entry.isEmpty()) return;
+		MenuEntryAndPos entryAndPos = entry.get();
+
+		MenuEntry hoveredEntry = entryAndPos.getMenuEntry();
+
+		if (!isTakeOrMarkClue(hoveredEntry)) return;
+
+		String text = getText(entryAndPos);
+
+		panelComponent.getChildren().add(LineComponent.builder().left(text).build());
+		double infoPanelWidth = panelComponent.getBounds().getWidth();
+		int viewportWidth = client.getViewportWidth();
+		if (menuX + menuWidth + infoPanelWidth > viewportWidth)
 		{
-			// Change text of actual clue
-			for (int i = currentMenuEntries.length - 1; i >= 0; i--)
-			{
-				int realPos = currentMenuEntries.length - i - 1;
-
-				MenuEntry hoveredEntry = currentMenuEntries[i];
-				Clues clue = Clues.forItemId(hoveredEntry.getIdentifier());
-				String newText;
-				if (clue != null)
-				{
-					newText = clue.getDetail(configManager);
-				}
-				else
-				{
-					newText = getTextForTrackedClue(hoveredEntry, realPos, entriesByTile);
-				}
-
-				if (newText == null || !isTakeOrMarkClue(hoveredEntry)) continue;
-				String regex = "Clue scroll \\(.*?\\)";
-
-				// Compile the pattern
-				Pattern pattern = Pattern.compile(regex);
-				Matcher matcher = pattern.matcher(hoveredEntry.getTarget());
-
-				// Handle master three-step cryptic
-				String[] newTexts = newText.split("<br>");
-
-				// TODO: Text doesn't update after details changed
-				// TODO: Doesn't update when torn parts obtained
-				if (newTexts.length > 1)
-				{
-					Menu submenu = hoveredEntry.createSubMenu();
-
-					for (String text : newTexts)
-					{
-						submenu.createMenuEntry(-1)
-							.setOption(text)
-							.setType(MenuAction.RUNELITE);
-					}
-					newText = "Three-step (master)";
-				}
-				// Replace the matched text with the new text
-				String newTarget = matcher.replaceAll(newText);
-
-				hoveredEntry.setTarget(newTarget);
-			}
+			panelComponent.setPreferredLocation(new java.awt.Point(menuX - (int) infoPanelWidth, entryTopY));
 		}
-
-		if (!config.showHoverText())
+		else
 		{
-			return;
-		}
-
-		for (int i = currentMenuEntries.length - 1; i >= 0; i--)
-		{
-			MenuEntry hoveredEntry = currentMenuEntries[i];
-
-			int realPos = currentMenuEntries.length - i - 1;
-
-			if (!isTakeOrMarkClue(hoveredEntry) && !isReadClue(hoveredEntry)) continue;
-
-			int entryTopY = menuY + headerHeight + realPos * menuEntryHeight;
-			int entryBottomY = entryTopY + menuEntryHeight;
-
-			if (mousePosition.getX() > menuX && mousePosition.getX() < menuX + menuWidth &&
-				mousePosition.getY() > entryTopY && mousePosition.getY() <= entryBottomY)
-			{
-				String text = getText(hoveredEntry, realPos);
-				if (text == null && !entriesByTile.isEmpty())
-				{
-					text = getTextForTrackedClue(hoveredEntry, realPos, entriesByTile);
-					if (text == null || text.isEmpty()) continue;
-				}
-
-				panelComponent.getChildren().add(LineComponent.builder().left(text).build());
-				double infoPanelWidth = panelComponent.getBounds().getWidth();
-				int viewportWidth = client.getViewportWidth();
-				if (menuX + menuWidth + infoPanelWidth > viewportWidth)
-				{
-					panelComponent.setPreferredLocation(new java.awt.Point(menuX - (int) infoPanelWidth, entryTopY));
-				}
-				else
-				{
-					panelComponent.setPreferredLocation(new java.awt.Point(menuX + menuWidth, entryTopY));
-				}
-
-				break;
-			}
+			panelComponent.setPreferredLocation(new java.awt.Point(menuX + menuWidth, entryTopY));
 		}
 	}
 
-	private Map<WorldPoint, List<MenuEntry>> getEntriesByTile(MenuEntry[] menuEntries)
+	private List<MenuEntryAndPos> getEntriesByTile(MenuEntry[] menuEntries)
 	{
 		// Order on floor is drop order from what I can tell.
 		// Most recently dropped is in pos 0 of array, up to first item dropped
-		Map<WorldPoint, List<MenuEntry>> mappedEntries = new HashMap<>();
+		List<MenuEntryAndPos> mappedEntries = new ArrayList<>();
 
+		Map<WorldPoint, Integer> foundPosForWp = new HashMap<>();
 		// We want to keep track from soonest to despawn to most recently dropped
 		for (int i = menuEntries.length - 1; i >= 0; i--)
 		{
-			if (!isTakeClue(menuEntries[i]) || !Clues.isTrackedClueOrTornClue(menuEntries[i].getIdentifier(), clueDetailsPlugin.isDeveloperMode())) continue;
+			if (!isTakeOrMarkClue(menuEntries[i])) continue;
 			int x = menuEntries[i].getParam0() * SCENE_TO_LOCAL;
 			int y = menuEntries[i].getParam1() * SCENE_TO_LOCAL;
 			int wv = menuEntries[i].getWorldViewId();
 			LocalPoint itemLp = new LocalPoint(x, y, wv);
 			WorldPoint itemWp = WorldPoint.fromLocal(client, itemLp);
-			mappedEntries.computeIfAbsent(itemWp, k -> new ArrayList<>()).add(menuEntries[i]);
+			int currentPosForTile = foundPosForWp.getOrDefault(itemWp, 0);
+			if (Clues.isTrackedClueOrTornClue(menuEntries[i].getIdentifier(), clueDetailsPlugin.isDeveloperMode()))
+			{
+				mappedEntries.add(new MenuEntryAndPos(menuEntries[i], menuEntries.length - i - 1, currentPosForTile));
+				if (isTakeClue(menuEntries[i])) foundPosForWp.put(itemWp, currentPosForTile + 1);
+			}
+			else
+			{
+				mappedEntries.add(new MenuEntryAndPos(menuEntries[i], menuEntries.length - i - 1, -1));
+			}
 		}
 		return mappedEntries;
-	}
-
-	private String getTextForTrackedClue(MenuEntry entry, int index, Map<WorldPoint, List<MenuEntry>> entriesByTile)
-	{
-		if (entriesByTile.isEmpty()) return null;
-
-		int sceneX = entry.getParam0();
-		int sceneY = entry.getParam1();
-		int wv = entry.getWorldViewId();
-		LocalPoint itemLp = new LocalPoint(sceneX * SCENE_TO_LOCAL, sceneY * SCENE_TO_LOCAL, wv);
-		WorldPoint itemWp = WorldPoint.fromLocalInstance(client, itemLp);
-		List<ClueInstance> trackedClues = clueGroundManager.getGroundClues().get(itemWp);
-		if (trackedClues == null) return null;
-		ClueInstance clueInstance = trackedClues.get(index);
-		if (clueInstance == null) return null;
-
-		return clueInstance.getCombinedClueText(configManager);
 	}
 
 	public boolean isTakeClue(MenuEntry entry)
 	{
 		String option = entry.getOption();
 		MenuAction type = entry.getType();
+		int identifier = entry.getIdentifier();
 
-		return type == MenuAction.GROUND_ITEM_THIRD_OPTION && option.equals("Take");
+		return Clues.isClue(identifier, clueDetailsPlugin.isDeveloperMode()) && type == MenuAction.GROUND_ITEM_THIRD_OPTION && option.equals("Take");
 	}
 
 	public boolean isTakeOrMarkClue(MenuEntry entry)
 	{
-		String target = entry.getTarget();
 		String option = entry.getOption();
 		MenuAction type = entry.getType();
 		int identifier = entry.getIdentifier();
@@ -343,8 +327,9 @@ public class ClueDetailsOverlay extends OverlayPanel
 		return "true".equals(shouldHighlight);
 	}
 
-	private String getText(MenuEntry menuEntry, int posInMenu)
+	private String getText(MenuEntryAndPos menuEntryAndPos)
 	{
+		MenuEntry menuEntry = menuEntryAndPos.getMenuEntry();
 		int scrollID = menuEntry.getIdentifier();
 		if (isReadClue(menuEntry))
 		{
@@ -366,7 +351,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 		}
 
 		MenuEntry[] currentMenuEntries = {menuEntry};
-		Map<WorldPoint, List<MenuEntry>> entriesByTile = new HashMap<>();
+		List<MenuEntryAndPos> entriesByTile = new ArrayList<>();
 		if (Arrays.stream(currentMenuEntries).anyMatch(this::isTakeClue))
 		{
 			entriesByTile = getEntriesByTile(currentMenuEntries);
@@ -374,10 +359,27 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		if (!entriesByTile.isEmpty())
 		{
-			return getTextForTrackedClue(menuEntry, posInMenu, entriesByTile);
+			return getTextForTrackedClue(menuEntryAndPos);
 		}
 
 		return null;
+	}
+
+
+	private String getTextForTrackedClue(MenuEntryAndPos entry)
+	{
+		MenuEntry menuEntry = entry.getMenuEntry();
+		int sceneX = menuEntry.getParam0();
+		int sceneY = menuEntry.getParam1();
+		int wv = menuEntry.getWorldViewId();
+		LocalPoint itemLp = new LocalPoint(sceneX * SCENE_TO_LOCAL, sceneY * SCENE_TO_LOCAL, wv);
+		WorldPoint itemWp = WorldPoint.fromLocalInstance(client, itemLp);
+		List<ClueInstance> trackedClues = clueGroundManager.getGroundClues().get(itemWp);
+		if (trackedClues == null) return null;
+		ClueInstance clueInstance = trackedClues.get(entry.getPosOnTile());
+		if (clueInstance == null) return null;
+
+		return clueInstance.getCombinedClueText(configManager);
 	}
 
 	@Subscribe
