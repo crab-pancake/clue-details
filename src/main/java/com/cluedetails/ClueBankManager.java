@@ -24,6 +24,7 @@
  */
 package com.cluedetails;
 
+import com.google.gson.Gson;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,19 +36,19 @@ import net.runelite.client.config.ConfigManager;
 public class ClueBankManager
 {
 	private final Client client;
-	private ClueBankSaveDataManager clueBankSaveDataManager;
+	private final ClueBankSaveDataManager clueBankSaveDataManager;
 	private ClueInventoryManager clueInventoryManager;
 
 	Item[] lastBankItems;
 
-	private Map<Integer, ClueInstance> cluesInBank = new HashMap<>();
+	private final Map<Integer, ClueInstance> cluesInBank = new HashMap<>();
 
-	private Map<Integer, ClueInstance> cluesGoneFromInventory = new HashMap<>();
+	private final Map<Integer, ClueInstance> cluesGoneFromInventory = new HashMap<>();
 
-	public ClueBankManager(Client client, ConfigManager configManager)
+	public ClueBankManager(Client client, ConfigManager configManager, Gson gson)
 	{
 		this.client = client;
-		this.clueBankSaveDataManager = new ClueBankSaveDataManager(configManager);
+		this.clueBankSaveDataManager = new ClueBankSaveDataManager(configManager, gson);
 	}
 
 	public void startUp(ClueInventoryManager clueInventoryManager)

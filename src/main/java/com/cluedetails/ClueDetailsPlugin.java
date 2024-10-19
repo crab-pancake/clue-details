@@ -25,6 +25,7 @@
 package com.cluedetails;
 
 import com.cluedetails.panels.ClueDetailsParentPanel;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
@@ -118,6 +119,9 @@ public class ClueDetailsPlugin extends Plugin
 	@Named("developerMode")
 	private boolean developerMode;
 
+	@Inject
+	Gson gson;
+
 	@Getter
 	private ClueInventoryManager clueInventoryManager;
 
@@ -148,7 +152,7 @@ public class ClueDetailsPlugin extends Plugin
 
 		cluePreferenceManager = new CluePreferenceManager(configManager);
 		clueGroundManager = new ClueGroundManager(client, configManager, this);
-		clueBankManager = new ClueBankManager(client, configManager);
+		clueBankManager = new ClueBankManager(client, configManager, gson);
 		clueInventoryManager = new ClueInventoryManager(client, configManager, this, clueGroundManager, clueBankManager, chatboxPanelManager);
 		clueBankManager.startUp(clueInventoryManager);
 

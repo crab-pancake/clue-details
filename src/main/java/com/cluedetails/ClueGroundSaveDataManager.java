@@ -38,16 +38,15 @@ import net.runelite.client.config.ConfigManager;
 public class ClueGroundSaveDataManager
 {
 	private final ConfigManager configManager;
-
+	private final Gson gson;
 	private static final String CONFIG_GROUP = "clue-details";
 	private static final String GROUND_CLUES_KEY = "ground-clues";
-
-	private final Gson gson = new Gson();
 	private final List<ClueInstanceData> clueInstanceData = new ArrayList<>();
 
-	public ClueGroundSaveDataManager(ConfigManager configManager)
+	public ClueGroundSaveDataManager(ConfigManager configManager, Gson gson)
 	{
 		this.configManager = configManager;
+		this.gson = gson;
 	}
 
 	public void saveStateToConfig(Client client, Map<WorldPoint, List<ClueInstance>> groundClues)

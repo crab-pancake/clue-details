@@ -57,7 +57,7 @@ public class ClueGroundManager
 	{
 		this.client = client;
 		this.clueDetailsPlugin = clueDetailsPlugin;
-		this.clueGroundSaveDataManager = new ClueGroundSaveDataManager(configManager);
+		this.clueGroundSaveDataManager = new ClueGroundSaveDataManager(configManager, clueDetailsPlugin.gson);
 		clueGroundSaveDataManager.loadStateFromConfig(client);
 	}
 

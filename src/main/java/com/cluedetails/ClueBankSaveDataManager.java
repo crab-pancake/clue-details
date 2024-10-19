@@ -41,12 +41,13 @@ public class ClueBankSaveDataManager
 	private static final String CONFIG_GROUP = "clue-details";
 	private static final String BANK_CLUES_KEY = "bank-clues";
 
-	private final Gson gson = new Gson();
+	private final Gson gson;
 	private final List<ClueInstanceData> clueInstanceData = new ArrayList<>();
 
-	public ClueBankSaveDataManager(ConfigManager configManager)
+	public ClueBankSaveDataManager(ConfigManager configManager, Gson gson)
 	{
 		this.configManager = configManager;
+		this.gson = gson;
 	}
 
 	public void saveStateToConfig(Client client, Map<Integer, ClueInstance> bankClues)
