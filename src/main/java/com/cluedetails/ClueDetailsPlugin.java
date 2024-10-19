@@ -42,10 +42,9 @@ import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.WidgetLoaded;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.callback.ClientThread;
@@ -214,11 +213,11 @@ public class ClueDetailsPlugin extends Plugin
 		{
 			clueInventoryManager.updateClueText(event.getGroupId());
 		}
-		else if (event.getGroupId() == WidgetID.CLUE_SCROLL_GROUP_ID)
+		else if (event.getGroupId() == ComponentID.CLUESCROLL_TEXT >> 16)
 		{
 			clientThread.invokeLater(() ->
 			{
-				Widget clueScrollText = client.getWidget(WidgetInfo.CLUE_SCROLL_TEXT);
+				Widget clueScrollText = client.getWidget(ComponentID.CLUESCROLL_TEXT);
 				if (clueScrollText != null)
 				{
 					String text = clueScrollText.getText();
