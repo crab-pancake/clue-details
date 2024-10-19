@@ -2,7 +2,7 @@
 
 This plugin provides details on clue scrolls whilst they're on the floor. When you hover over a clue scroll, you'll get an infobox letting you know the step's details. This can be particularly useful for snowflake ironmen who can only do particular subsets of clues, allowing them to ignore ones they can't do.
 
-**NOTE**: This does not work for beginner or master clues.
+**NOTE**: This plugin will only work for beginner and master clues once you have read them once. After that, the plugin should keep track of them as long as they are in your inventory, dropped by you, or banked.
 
 ![Screenshot 2024-06-04 180849](https://github.com/Zoinkwiz/clue-regions/assets/29153234/4a470836-cff4-4ce7-93f1-060ba4a3a8d7)
 
