@@ -22,36 +22,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.cluedetails.filters;
+package com.cluedetails;
 
-import com.cluedetails.Clues;
-import java.util.Comparator;
 import java.util.List;
+import lombok.Data;
+import net.runelite.api.coords.WorldPoint;
 
-public class ClueOrders
+@Data
+public class ClueInstanceData
 {
-	static List<ClueTier> tierOrder = List.of(
-		ClueTier.BEGINNER,
-		ClueTier.EASY,
-		ClueTier.MEDIUM,
-		ClueTier.MEDIUM_KEY,
-		ClueTier.HARD,
-		ClueTier.ELITE,
-		ClueTier.MASTER
-	);
+	private List<Integer> clueIds;
+	private int itemId;
+	private int despawnTick;
+	private int x;
+	private int y;
+	private int plane;
 
-	static List<ClueRegion> regionOrder = List.of(
-		ClueRegion.MISTHALIN, ClueRegion.ASGARNIA, ClueRegion.KARAMJA, ClueRegion.KANDARIN, ClueRegion.FREMENNIK_PROVINCE, ClueRegion.KHARIDIAN_DESERT,
-		ClueRegion.MORYTANIA, ClueRegion.TIRANNWN, ClueRegion.WILDERNESS, ClueRegion.KOUREND, ClueRegion.VARLAMORE
-	);
-
-	public static Comparator<Clues> sortByTier()
+	public ClueInstanceData(ClueInstance clue, int currentTick)
 	{
-		return Comparator.comparing(q -> tierOrder.indexOf(q));
+		this.clueIds = clue.getClueIds();
+		this.itemId = clue.getItemId();
+		this.despawnTick = clue.getTicksToDespawnConsideringTileItem(currentTick);
+		if (clue.getLocation() == null) return;
+
+		this.x = clue.getLocation().getX();
+		this.y = clue.getLocation().getY();
+		this.plane = clue.getLocation().getPlane();
 	}
 
-	public static Comparator<Clues> sortByRegion()
+	public WorldPoint getLocation()
 	{
-		return Comparator.comparing(q -> regionOrder.indexOf(q));
+		return new WorldPoint(x, y, plane);
 	}
 }
