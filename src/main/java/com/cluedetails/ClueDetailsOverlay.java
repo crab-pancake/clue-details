@@ -422,7 +422,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 	{
 		tileHighlights.clear();
 
-		Tile[][] squareOfTiles = client.getScene().getTiles()[client.getTopLevelWorldView().getPlane()];
+		Tile[][] squareOfTiles = client.getTopLevelWorldView().getScene().getTiles()[client.getTopLevelWorldView().getPlane()];
 
 		// Reduce the two-dimensional array into a single list for processing.
 		List<Tile> tiles = Stream.of(squareOfTiles)
