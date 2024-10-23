@@ -174,7 +174,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 		List<MenuEntryAndPos> entriesByTile = getEntriesByTile(currentMenuEntries);
 
-		if (config.changeClueText() && entriesByTile.isEmpty())
+		if (config.changeClueText())
 		{
 			changeFloorText(entriesByTile);
 		}
