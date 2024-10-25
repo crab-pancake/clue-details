@@ -324,7 +324,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 		// Import/Export Options
 		JPanel markerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 7, 3));
 
-		resetMarkers.setToolTipText("Reset customised details");
+		resetMarkers.setToolTipText("Reset currently filtered customised details");
 		resetMarkers.addMouseListener(new MouseAdapter()
 		{
 			@Override
@@ -346,7 +346,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 			}
 		});
 
-		copyMarkers.setToolTipText("Export details to your clipboard");
+		copyMarkers.setToolTipText("Export currently filtered details to your clipboard");
 		copyMarkers.addMouseListener(new MouseAdapter()
 		{
 			@Override
