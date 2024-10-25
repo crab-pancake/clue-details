@@ -41,7 +41,7 @@ public class ClueInstance
 	private final WorldPoint location; // Null if in inventory
 
 	@Getter
-	private Integer timeToDespawnFromDataInTicks;
+	private final Integer timeToDespawnFromDataInTicks;
 	private TileItem tileItem;
 
 	// Constructor for clues from config
@@ -62,15 +62,17 @@ public class ClueInstance
 		this.clueIds = clueIds;
 		this.itemId = itemId;
 		this.location = null;
+		this.timeToDespawnFromDataInTicks = -1;
 	}
 
 	// Constructor for ground clues
-	public ClueInstance(List<Integer> clueIds, int itemId, WorldPoint location, TileItem tileItem)
+	public ClueInstance(List<Integer> clueIds, int itemId, WorldPoint location, TileItem tileItem, int currentTick)
 	{
 		this.clueIds = clueIds;
 		this.itemId = itemId;
 		this.location = location;
 		this.tileItem = tileItem;
+		this.timeToDespawnFromDataInTicks = currentTick;
 	}
 
 	public int getDespawnTick(int currentTick)

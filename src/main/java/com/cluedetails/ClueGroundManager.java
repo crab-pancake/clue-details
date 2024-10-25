@@ -218,7 +218,8 @@ public class ClueGroundManager
 					removedClue.getClueIds(),
 					pendingGroundClue.getItem().getId(),
 					pendingGroundClue.getLocation(),
-					pendingGroundClue.getItem()
+					pendingGroundClue.getItem(),
+					client.getTickCount()
 				);
 
 				addClue(groundClueInstance);
@@ -251,7 +252,8 @@ public class ClueGroundManager
 					List.of(),
 					pendingGroundClue.getItem().getId(),
 					pendingGroundClue.getLocation(),
-					pendingGroundClue.getItem()
+					pendingGroundClue.getItem(),
+					client.getTickCount()
 				);
 
 				addClue(groundClueInstance);
@@ -332,7 +334,9 @@ public class ClueGroundManager
 				ClueInstance clueInstance = new ClueInstance(List.of(),
 					groundClue.getId(),
 					tileWp,
-					groundClue);
+					groundClue,
+					client.getTickCount()
+				);
 				clueInstance.setTileItem(groundClue);
 				actualCluesOnTile.add(clueInstance);
 			}
@@ -372,7 +376,7 @@ public class ClueGroundManager
 				.filter(clue -> clue.getTileItem() == tileItem)
 				.findFirst()
 				.orElseGet(() -> {
-					ClueInstance clueInstance = new ClueInstance(List.of(), tileItem.getId(), tileWp, tileItem);
+					ClueInstance clueInstance = new ClueInstance(List.of(), tileItem.getId(), tileWp, tileItem, client.getTickCount());
 					clueInstance.setTileItem(tileItem);
 					return clueInstance;
 				}))
