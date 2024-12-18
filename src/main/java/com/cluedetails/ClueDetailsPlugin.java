@@ -119,6 +119,7 @@ public class ClueDetailsPlugin extends Plugin
 	@Named("developerMode")
 	private boolean developerMode;
 
+	@Getter
 	@Inject
 	Gson gson;
 

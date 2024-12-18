@@ -297,9 +297,8 @@ public class ClueDetailsParentPanel extends PluginPanel
 					}
 					if (config.colorInventoryTags())
 					{
-						Gson gson = new Gson();
 						configManager.setConfiguration(InventoryTagsConfig.GROUP, "tag_" + clueItemId,
-							gson.toJson(Map.of("color", c)));
+							plugin.getGson().toJson(Map.of("color", c)));
 					}
 				}
 			});
