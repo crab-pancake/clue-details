@@ -104,7 +104,7 @@ public class ClueDetailsItemsOverlay extends WidgetItemOverlay
 		{
 			if (clue == null) continue;
 
-			if (isEnabled(clue))
+			if (clue.isEnabled(config))
 			{
 				if (config.highlightInventoryClueScrolls())
 				{
@@ -124,10 +124,11 @@ public class ClueDetailsItemsOverlay extends WidgetItemOverlay
 			ClueInstance instance = clueInventoryManager.getTrackedClueByClueItemId(itemID);
 			if (instance == null) continue;
 
-			instance.getClueIds().forEach((clueId) -> {
+			instance.getClueIds().forEach((clueId) ->
+			{
 				Clues clue = Clues.forClueIdFiltered(clueId);
 				if (clue == null) return;
-				if (isEnabled(clue))
+				if (clue.isEnabled(config))
 				{
 					if (config.highlightInventoryClueScrolls())
 					{

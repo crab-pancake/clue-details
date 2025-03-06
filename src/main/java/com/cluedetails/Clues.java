@@ -1211,14 +1211,9 @@ public class Clues
 		return filteredClues().stream().anyMatch((clue) -> clue.getItemID() == itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
 	}
 
-	public static boolean isTrackedClue(int itemId, boolean isDeveloperMode)
-	{
-		return TRACKED_CLUE_IDS.contains(itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
-	}
-
 	public static boolean isTrackedClueOrTornClue(int itemId, boolean isDeveloperMode)
 	{
-		return TRACKED_CLUE_IDS.contains(itemId) || TRACKED_TORN_CLUE_IDS.contains(itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
+		return isClue(itemId, isDeveloperMode) || TRACKED_TORN_CLUE_IDS.contains(itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
 	}
 
 	public static Collection<Integer> getTrackedClueAndTornClueIds(boolean isDevMode)
@@ -1228,5 +1223,38 @@ public class Clues
 		allIds.addAll(TRACKED_TORN_CLUE_IDS);
 		if (isDevMode) allIds.addAll(DEV_MODE_IDS);
 		return allIds;
+	}
+
+	public boolean isEnabled(ClueDetailsConfig config)
+	{
+		ClueTier tier = getClueTier();
+
+		if (config == null) return true;
+
+		if (tier == ClueTier.BEGINNER)
+		{
+			return config.beginnerDetails();
+		}
+		if (tier == ClueTier.EASY)
+		{
+			return config.easyDetails();
+		}
+		if (tier == ClueTier.MEDIUM || tier == ClueTier.MEDIUM_CHALLENGE || tier == ClueTier.MEDIUM_KEY)
+		{
+			return config.mediumDetails();
+		}
+		if (tier == ClueTier.HARD || tier == ClueTier.HARD_CHALLENGE)
+		{
+			return config.hardDetails();
+		}
+		if (tier == ClueTier.ELITE || tier == ClueTier.ELITE_CHALLENGE)
+		{
+			return config.eliteDetails();
+		}
+		if (tier == ClueTier.MASTER)
+		{
+			return config.masterDetails();
+		}
+		return true;
 	}
 }

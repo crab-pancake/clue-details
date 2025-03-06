@@ -29,9 +29,7 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
@@ -44,8 +42,6 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TextComponent;
-import net.runelite.client.util.QuantityFormatter;
-import org.apache.commons.text.WordUtils;
 
 // Heavily lifted from net.runelite.client.plugins.grounditems.GroundItemsOverlay
 public class ClueGroundOverlay extends Overlay
@@ -61,7 +57,6 @@ public class ClueGroundOverlay extends Overlay
 
 	private final Client client;
 	private final ClueDetailsConfig config;
-	private final StringBuilder itemStringBuilder = new StringBuilder();
 	private final TextComponent textComponent = new TextComponent();
 	private final Map<WorldPoint, Integer> offsetMap = new HashMap<>();
 	private final ConfigManager configManager;
@@ -72,7 +67,7 @@ public class ClueGroundOverlay extends Overlay
 	private ClueGroundOverlay(ClueDetailsPlugin plugin, Client client, ClueDetailsConfig config, ConfigManager configManager)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.ABOVE_SCENE);
+		setLayer(OverlayLayer.UNDER_WIDGETS);
 		this.plugin = plugin;
 		this.client = client;
 		this.config = config;
@@ -105,9 +100,7 @@ public class ClueGroundOverlay extends Overlay
 		offsetMap.clear();
 		final LocalPoint localLocation = player.getLocalLocation();
 
-		// Handle beginner and master clues
-		if (clueGroundManager.getGroundClues().keySet().isEmpty()
-			|| (!config.beginnerDetails() && !config.masterDetails()))
+		if (clueGroundManager.getGroundClues().keySet().isEmpty())
 		{
 			return null;
 		}
@@ -123,14 +116,14 @@ public class ClueGroundOverlay extends Overlay
 			}
 
 			// Get list of ClueInstances at wp with optionally collapsed quantities
-			Map<ClueInstance, Integer> clueInstancesAtWpMap = getClueInstancesAtWpMap(wp, client.getTickCount());
+			Map<ClueInstance, Integer> clueInstancesWithQuantityAtWp = clueGroundManager.getClueInstancesWithQuantityAtWp(config, wp, client.getTickCount());
 
-			if (clueInstancesAtWpMap == null)
+			if (clueInstancesWithQuantityAtWp == null)
 			{
 				continue;
 			}
 
-			for (Map.Entry<ClueInstance, Integer> entry : clueInstancesAtWpMap.entrySet())
+			for (Map.Entry<ClueInstance, Integer> entry : clueInstancesWithQuantityAtWp.entrySet())
 			{
 				ClueInstance item = entry.getKey();
 
@@ -145,79 +138,9 @@ public class ClueGroundOverlay extends Overlay
 		return null;
 	}
 
-	private Map<ClueInstance, Integer> getClueInstancesAtWpMap(WorldPoint wp, int currentTick)
-	{
-		if (clueGroundManager.getGroundClues().get(wp).isEmpty()) return null;
-
-		List<ClueInstance> groundItemList = clueGroundManager.getGroundClues().get(wp);
-		Map<ClueInstance, Integer> groundItemMap = new HashMap<>();
-
-		if (config.collapseGroundClues())
-		{
-			groundItemMap = keepOldestUniqueClues(groundItemList, currentTick);
-		}
-		else
-		{
-			for (ClueInstance item : groundItemList)
-			{
-				groundItemMap.put(item, 1);
-			}
-		}
-		return groundItemMap;
-	}
-
 	private void renderClueInstanceGroundOverlay(Graphics2D graphics, ClueInstance item, int quantity, LocalPoint groundPoint, FontMetrics fm)
 	{
-		Color color = Color.WHITE;
-
-		if (item.getClueIds().isEmpty())
-		{
-			itemStringBuilder.append(item.getItemName(plugin));
-		}
-		else
-		{
-			int clueId = item.getClueIds().get(0);
-			Clues clueDetails = Clues.forClueIdFiltered(clueId);
-
-			if (clueDetails == null)
-			{
-				return;
-			}
-
-			String clueText;
-			if (config.changeGroundClueText())
-			{
-				if (item.getClueIds().size() > 1)
-				{
-					clueText = "Three-step (master)";
-				}
-				else
-				{
-					clueText = clueDetails.getDetail(configManager);
-				}
-			}
-			else
-			{
-				clueText = WordUtils.capitalizeFully(clueDetails.getClueTier().toString());
-			}
-
-			itemStringBuilder.append(clueText);
-
-			if (config.colorGroundClues())
-			{
-				color = clueDetails.getDetailColor(configManager);
-			}
-		}
-
-		if (config.collapseGroundClues() && quantity > 1)
-		{
-			itemStringBuilder.append(" (")
-				.append(QuantityFormatter.quantityToStackSize(quantity))
-				.append(')');
-		}
-
-		final String itemString = itemStringBuilder.toString();
-		itemStringBuilder.setLength(0);
+		final String itemString = item.getGroundText(plugin, config, configManager, quantity);
 
 		final Point textPoint = Perspective.getCanvasTextLocation(client,
 			graphics,
@@ -252,26 +175,8 @@ public class ClueGroundOverlay extends Overlay
 		}
 
 		textComponent.setText(itemString);
-		textComponent.setColor(color);
+		textComponent.setColor(item.getGroundColor(config, configManager));
 		textComponent.setPosition(new java.awt.Point(textX, textY));
 		textComponent.render(graphics);
-	}
-
-	// Remove duplicate clues, maintaining a count of the original amount of each
-	public static Map<ClueInstance, Integer> keepOldestUniqueClues(List<ClueInstance> items, int currentTick) {
-		Map<List<Integer>, ClueInstance> lowestValueItems = new HashMap<>();
-		Map<List<Integer>, Integer> uniqueCount = new HashMap<>();
-
-		for (ClueInstance item : items) {
-			if (!lowestValueItems.containsKey(item.getClueIds()) || item.getDespawnTick(currentTick) < lowestValueItems.get(item.getClueIds()).getDespawnTick(currentTick)) {
-				lowestValueItems.put(item.getClueIds(), item);
-				uniqueCount.put(item.getClueIds(), 1);
-			} else {
-				uniqueCount.put(item.getClueIds(), uniqueCount.get(item.getClueIds()) + 1);
-			}
-		}
-
-		return lowestValueItems.values().stream()
-			.collect(Collectors.toMap(item -> item, item -> uniqueCount.get(item.getClueIds())));
 	}
 }

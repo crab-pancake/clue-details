@@ -24,6 +24,7 @@
  */
 package com.cluedetails;
 
+import com.cluedetails.filters.ClueTier;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import net.runelite.api.*;
@@ -67,7 +68,7 @@ public class ClueGroundManager
 		// If log in on tile with clues on it, spawned. Won't be dropped, but could be dropped?
 		// Main issue is we don't want to create a new groundClue if it was dropped, as we will then also be doing another new one after.
 		TileItem item = event.getItem();
-		if (!Clues.isTrackedClueOrTornClue(item.getId(), clueDetailsPlugin.isDeveloperMode())) return;
+		if (!Clues.isClue(item.getId(), clueDetailsPlugin.isDeveloperMode())) return;
 		if (checkIfItemMatchesKnownItem(event.getTile(), item, event.getTile().getWorldLocation())) return;
 
 		// New despawn timer, probably been dropped. Track to see what it was.
@@ -86,7 +87,7 @@ public class ClueGroundManager
 	public void onItemDespawned(ItemDespawned event)
 	{
 		TileItem item = event.getItem();
-		if (!Clues.isTrackedClueOrTornClue(item.getId(), clueDetailsPlugin.isDeveloperMode())) return;
+		if (!Clues.isClue(item.getId(), clueDetailsPlugin.isDeveloperMode())) return;
 		WorldPoint location = event.getTile().getWorldLocation();
 		List<ClueInstance> cluesAtLocation = groundClues.get(location);
 
@@ -191,7 +192,8 @@ public class ClueGroundManager
 
 	private void processEmptyTiles()
 	{
-		groundClues.entrySet().removeIf(entry -> {
+		groundClues.entrySet().removeIf(entry ->
+		{
 			Tile tile = getTileAtWorldPoint(entry.getKey());
 			if (tile == null) return false;
 
@@ -265,7 +267,8 @@ public class ClueGroundManager
 
 	private void removeDespawnedClues()
 	{
-		groundClues.entrySet().removeIf(entry -> {
+		groundClues.entrySet().removeIf(entry ->
+		{
 			List<ClueInstance> cluesList = entry.getValue();
 			cluesList.removeIf(clueInstance -> clueInstance.getDespawnTick(client.getTickCount()) <= client.getTickCount());
 			return cluesList.isEmpty();
@@ -365,7 +368,8 @@ public class ClueGroundManager
 			.map(tileItem -> sortedStoredClues.stream()
 				.filter(clue -> clue.getTileItem() == tileItem)
 				.findFirst()
-				.orElseGet(() -> {
+				.orElseGet(() ->
+				{
 					ClueInstance clueInstance = new ClueInstance(List.of(), tileItem.getId(), tileWp, tileItem, client.getTickCount());
 					clueInstance.setTileItem(tileItem);
 					return clueInstance;
@@ -424,8 +428,110 @@ public class ClueGroundManager
 			return Collections.emptyList();
 		}
 		return items.stream()
-			.filter(item -> Clues.isTrackedClueOrTornClue(item.getId(), clueDetailsPlugin.isDeveloperMode()))
+			.filter(item -> Clues.isClue(item.getId(), clueDetailsPlugin.isDeveloperMode()))
 			.collect(Collectors.toList());
+	}
+
+	class ClueInstanceComparator implements Comparator<ClueInstance>
+	{
+		@Override
+		public int compare(ClueInstance o1, ClueInstance o2)
+		{
+			// Primary comparison: Compare by despawn time
+			int despawnComparison = Integer.compare(o1.getTicksToDespawnConsideringTileItem(client.getTickCount()),
+				o2.getTicksToDespawnConsideringTileItem(client.getTickCount()));
+			if (despawnComparison != 0)
+			{
+				return despawnComparison;
+			}
+			else
+			{
+				// Secondary comparison: If despawn times are the same, compare by itemId
+				return Integer.compare(o1.getItemId(), o2.getItemId());
+			}
+		}
+	}
+
+	public TreeMap<ClueInstance, Integer> getClueInstancesWithQuantityAtWp(ClueDetailsConfig config, WorldPoint wp, int currentTick)
+	{
+		if (groundClues.get(wp).isEmpty()) return null;
+
+		List<ClueInstance> groundItemList = groundClues.get(wp);
+		Map<ClueInstance, Integer> groundItemMap = new HashMap<>();
+
+		if (config.collapseGroundCluesByTier())
+		{
+			groundItemMap = keepOldestTierClues(groundItemList, currentTick);
+		}
+		else if (config.collapseGroundClues())
+		{
+			groundItemMap = keepOldestUniqueClues(groundItemList, currentTick);
+		}
+		else
+		{
+			for (ClueInstance item : groundItemList)
+			{
+				groundItemMap.put(item, 1);
+			}
+		}
+
+		// Sort ClueInstances by despawn time
+		ClueInstanceComparator clueInstanceComparator = new ClueInstanceComparator();
+		TreeMap<ClueInstance, Integer> clueInstancesWithQuantityAtWp = new TreeMap<>(clueInstanceComparator);
+		clueInstancesWithQuantityAtWp.putAll(groundItemMap);
+		return clueInstancesWithQuantityAtWp;
+	}
+
+	// Remove duplicate step clues, maintaining a count of the original amount of each
+	public static Map<ClueInstance, Integer> keepOldestUniqueClues(List<ClueInstance> items, int currentTick)
+	{
+		Map<List<Integer>, ClueInstance> lowestValueItems = new HashMap<>();
+		Map<List<Integer>, Integer> uniqueCount = new HashMap<>();
+
+		for (ClueInstance item : items)
+		{
+			List<Integer> clueIds = item.getClueIds();
+
+			if (!lowestValueItems.containsKey(clueIds)
+				|| item.getDespawnTick(currentTick) < lowestValueItems.get(clueIds).getDespawnTick(currentTick))
+			{
+				lowestValueItems.put(clueIds, item);
+				uniqueCount.put(clueIds, 1);
+			}
+			else
+			{
+				uniqueCount.put(clueIds, uniqueCount.get(clueIds) + 1);
+			}
+		}
+
+		return lowestValueItems.values().stream()
+			.collect(Collectors.toMap(item -> item, item -> uniqueCount.get(item.getClueIds())));
+	}
+
+	// Remove duplicate tier clues, maintaining a count of the original amount of each
+	public static Map<ClueInstance, Integer> keepOldestTierClues(List<ClueInstance> items, int currentTick)
+	{
+		Map<ClueTier, ClueInstance> lowestValueItems = new HashMap<>();
+		Map<ClueTier, Integer> uniqueCount = new HashMap<>();
+
+		for (ClueInstance item : items)
+		{
+			ClueTier tier = item.getTier();
+
+			if (!lowestValueItems.containsKey(tier)
+				|| item.getDespawnTick(currentTick) < lowestValueItems.get(tier).getDespawnTick(currentTick))
+			{
+				lowestValueItems.put(tier, item);
+				uniqueCount.put(tier, 1);
+			}
+			else
+			{
+				uniqueCount.put(tier, uniqueCount.get(tier) + 1);
+			}
+		}
+
+		return lowestValueItems.values().stream()
+			.collect(Collectors.toMap(item -> item, item ->	uniqueCount.get(item.getTier())));
 	}
 
 	public void saveStateToConfig()

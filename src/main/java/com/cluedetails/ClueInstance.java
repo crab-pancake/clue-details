@@ -24,7 +24,9 @@
  */
 package com.cluedetails;
 
+import com.cluedetails.filters.ClueTier;
 import java.awt.Color;
+import java.util.Collections;
 import java.util.List;
 import lombok.Data;
 import lombok.Getter;
@@ -33,6 +35,8 @@ import net.runelite.api.ItemID;
 import net.runelite.api.TileItem;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.util.QuantityFormatter;
+import org.apache.commons.text.WordUtils;
 
 @Data
 public class ClueInstance
@@ -75,6 +79,106 @@ public class ClueInstance
 		this.location = location;
 		this.tileItem = tileItem;
 		this.timeToDespawnFromDataInTicks = currentTick;
+	}
+
+	public List<Integer> getClueIds()
+	{
+		if (clueIds.isEmpty() && !(itemId == ItemID.CLUE_SCROLL_BEGINNER || itemId == ItemID.CLUE_SCROLL_MASTER))
+		{
+			return Collections.singletonList(itemId);
+		}
+		return clueIds;
+	}
+
+	public ClueTier getTier()
+	{
+		Clues clue;
+
+		if (clueIds.isEmpty())
+		{
+			clue = Clues.forItemId(itemId);
+		}
+		else
+		{
+			clue = Clues.forClueId(getClueIds().get(0));
+		}
+
+		if (clue == null)
+		{
+			return null;
+		}
+		return clue.getClueTier();
+	}
+
+	public String getGroundText(ClueDetailsPlugin plugin, ClueDetailsConfig config, ConfigManager configManager, int quantity)
+	{
+		StringBuilder itemStringBuilder = new StringBuilder();
+		List<Integer> clueIds = this.getClueIds();
+
+		if (clueIds.isEmpty())
+		{
+			itemStringBuilder.append(this.getItemName(plugin));
+		}
+		else
+		{
+			int clueId = this.getClueIds().get(0);
+			Clues clueDetails = Clues.forClueIdFiltered(clueId);
+
+			if (clueDetails == null)
+			{
+				return null;
+			}
+
+			String clueText;
+			if (config.changeGroundClueText() && !config.collapseGroundCluesByTier())
+			{
+				if (clueIds.size() > 1)
+				{
+					clueText = "Three-step (master)";
+				}
+				else
+				{
+					clueText = clueDetails.getDetail(configManager);
+				}
+			}
+			else
+			{
+				clueText = WordUtils.capitalizeFully(clueDetails.getClueTier().toString().replace("_", " "));
+			}
+
+			itemStringBuilder.append(clueText);
+		}
+
+		if ((config.collapseGroundClues() || config.collapseGroundCluesByTier()) && quantity > 1)
+		{
+			itemStringBuilder.append(" (")
+				.append(QuantityFormatter.quantityToStackSize(quantity))
+				.append(')');
+		}
+		return itemStringBuilder.toString();
+	}
+
+	public Color getGroundColor(ClueDetailsConfig config, ConfigManager configManager)
+	{
+		Color color = Color.WHITE;
+		List<Integer> clueIds = this.getClueIds();
+
+		if (!clueIds.isEmpty())
+		{
+			int clueId = this.getClueIds().get(0);
+			Clues clueDetails = Clues.forClueIdFiltered(clueId);
+
+			if (clueDetails == null)
+			{
+				return color;
+			}
+
+			if (config.colorGroundClues())
+			{
+				color = clueDetails.getDetailColor(configManager);
+			}
+		}
+		return color;
 	}
 
 	public int getDespawnTick(int currentTick)
@@ -143,10 +247,26 @@ public class ClueInstance
 		{
 			return config.beginnerDetails();
 		}
-		else if (itemId == ItemID.CLUE_SCROLL_MASTER )
+		else if (getTier() == ClueTier.EASY)
+		{
+			return config.easyDetails();
+		}
+		else if (getTier() == ClueTier.MEDIUM)
+		{
+			return config.mediumDetails();
+		}
+		else if (getTier() == ClueTier.HARD)
+		{
+			return config.hardDetails();
+		}
+		else if (getTier() == ClueTier.ELITE)
+		{
+			return config.eliteDetails();
+		}
+		else if (itemId == ItemID.CLUE_SCROLL_MASTER)
 		{
 			return config.masterDetails();
 		}
-		return true;
+		else return getTier() != null;
 	}
 }
