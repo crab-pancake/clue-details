@@ -76,6 +76,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 	private JTable clueTable;
 	@Getter
 	private int hoveredRow = -1;
+	private int rightClickedRow = -1;
 	private final IconTextField searchBar = new IconTextField();
 	private List<ListItem> allClues = new ArrayList<>();
 
@@ -169,6 +170,8 @@ public class ClueDetailsParentPanel extends PluginPanel
 		clueTable.setDefaultRenderer(Object.class, new ClueTableCellRenderer(this, cluePreferenceManager, configManager));
 		clueTable.setDefaultEditor(Object.class, new ClueTableCellEditor(configManager, clueTable));
 
+		JPopupMenu clueTablePopupMenu = getClueTablePopupMenu();
+		clueTable.setComponentPopupMenu(clueTablePopupMenu);
 		clueTable.addMouseListener(new MouseAdapter()
 		{
 			@Override
@@ -185,16 +188,16 @@ public class ClueDetailsParentPanel extends PluginPanel
 				Clues clue = item.getClue();
 				if (!clickedOnTextBox(e, row)) return;
 
-				if (e.getButton() == MouseEvent.BUTTON1)
+				if (SwingUtilities.isLeftMouseButton(e))
 				{
 					boolean currentState = cluePreferenceManager.getHighlightPreference(clue.getClueID());
 					boolean newState = !currentState;
 					cluePreferenceManager.saveHighlightPreference(clue.getClueID(), newState);
 					clueTable.repaint();
 				}
-				else if (e.getButton() == MouseEvent.BUTTON3)
+				else if (SwingUtilities.isRightMouseButton(e))
 				{
-					openPopup(e, row);
+					rightClickedRow = row;
 				}
 			}
 
@@ -252,28 +255,27 @@ public class ClueDetailsParentPanel extends PluginPanel
 			cellY >= textAreaY && cellY <= textAreaY + textAreaHeight;
 	}
 
-	private void openPopup(MouseEvent e, int row)
+	private JPopupMenu getClueTablePopupMenu()
 	{
 		JPopupMenu popupMenu = new JPopupMenu();
 
 		JMenuItem inputTextItem = new JMenuItem("Edit text for clue");
 		inputTextItem.addActionListener(event ->
 		{
-			clueTableModel.setEditableRow(row);
-			clueTable.editCellAt(row, 0);
+			clueTableModel.setEditableRow(rightClickedRow);
+			clueTable.editCellAt(rightClickedRow, 0);
 			Component editorComponent = clueTable.getEditorComponent();
 			if (editorComponent != null)
 			{
 				editorComponent.requestFocusInWindow();
 			}
 		});
-
 		popupMenu.add(inputTextItem);
 
 		JMenuItem inputColorItem = new JMenuItem("Edit color for clue");
 		inputColorItem.addActionListener(event ->
 		{
-			ListItem item = (ListItem) clueTableModel.getValueAt(row, 0);
+			ListItem item = (ListItem) clueTableModel.getValueAt(rightClickedRow, 0);
 			Clues clue = item.getClue();
 			int clueItemId = clue.getItemID();
 			int clueClueID = clue.getClueID();
@@ -322,14 +324,13 @@ public class ClueDetailsParentPanel extends PluginPanel
 			});
 			colorPicker.setVisible(true);
 		});
-
 		popupMenu.add(inputColorItem);
 
 		String inputItemsTooltip = "Add/Remove item";
 		JMenuItem inputItems = new JMenuItem(inputItemsTooltip);
 		inputItems.addActionListener(event ->
 		{
-			ListItem item = (ListItem) clueTableModel.getValueAt(row, 0);
+			ListItem item = (ListItem) clueTableModel.getValueAt(rightClickedRow, 0);
 			Clues clue = item.getClue();
 
 			ChatboxItemSearch itemSearch = getItemSearch(inputItemsTooltip);
@@ -363,10 +364,9 @@ public class ClueDetailsParentPanel extends PluginPanel
 				cluePreferenceManager.saveItemsPreference(clueId, clueItemIds);
 			}).build();
 		});
-
 		popupMenu.add(inputItems);
 
-		popupMenu.show(e.getComponent(), e.getX(), e.getY());
+		return popupMenu;
 	}
 
 	private void openResetPopup()
@@ -454,18 +454,16 @@ public class ClueDetailsParentPanel extends PluginPanel
 		});
 
 		copyMarkers.setToolTipText("Export currently filtered details to your clipboard");
+		JPopupMenu copyPopupMenu = getCopyPopupMenu();
+		copyMarkers.setComponentPopupMenu(copyPopupMenu);
 		copyMarkers.addMouseListener(new MouseAdapter()
 		{
 			@Override
 			public void mousePressed(MouseEvent e)
 			{
-				if (e.getButton() == MouseEvent.BUTTON1)
+				if (SwingUtilities.isLeftMouseButton(e))
 				{
 					clueDetailsSharingManager.exportClueDetails(true, true, true);
-				}
-				else if (e.getButton() == MouseEvent.BUTTON3)
-				{
-					selectiveExport(e);
 				}
 			}
 
@@ -534,7 +532,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 		searchCluesPanel.add(allDropdownSections, BorderLayout.NORTH);
 	}
 
-	private void selectiveExport(MouseEvent e)
+	private JPopupMenu getCopyPopupMenu()
 	{
 		JPopupMenu popupMenu = new JPopupMenu();
 
@@ -556,7 +554,7 @@ public class ClueDetailsParentPanel extends PluginPanel
 		);
 		popupMenu.add(inputItemExportItems);
 
-		popupMenu.show(e.getComponent(), e.getX(), e.getY());
+		return popupMenu;
 	}
 
 	private JComboBox<Enum> makeNewDropdown(Enum[] values, String key)
