@@ -1076,9 +1076,19 @@ public class Clues
 		ItemID.DAEYALT_ESSENCE
 	);
 
-	public static List<Clues> filteredClues()
+	private static List<Clues> cachedFilteredClues = createFilteredCluesCache();
+
+	public static void rebuildFilteredCluesCache()
 	{
-		if (config == null) return Clues.CLUES;
+		cachedFilteredClues = createFilteredCluesCache();
+	}
+
+	private static List<Clues> createFilteredCluesCache()
+	{
+		if (config == null)
+		{
+			return Clues.CLUES;
+		}
 
 		List<ClueTier> enabledClues = new ArrayList<>();
 		if (config.beginnerDetails()) enabledClues.add(ClueTier.BEGINNER);
@@ -1102,8 +1112,13 @@ public class Clues
 		if (config.masterDetails()) enabledClues.add(ClueTier.MASTER);
 
 		return Clues.CLUES.stream()
-			.filter(c -> enabledClues.contains(c.getClueTier()))
-			.collect(Collectors.toList());
+				.filter(c -> enabledClues.contains(c.getClueTier()))
+				.collect(Collectors.toList());
+	}
+
+	public static List<Clues> filteredClues()
+	{
+		return cachedFilteredClues;
 	}
 
 	public static Clues forItemId(int itemId)
