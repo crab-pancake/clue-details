@@ -31,9 +31,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.reflect.TypeToken;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.ItemID;
@@ -1076,18 +1080,36 @@ public class Clues
 		ItemID.DAEYALT_ESSENCE
 	);
 
-	private static List<Clues> cachedFilteredClues = createFilteredCluesCache();
+	private static Map<Integer, List<Clues>> itemIdClueCache = new HashMap<>();
+	private static Map<Integer, Clues> clueIdClueCache = new HashMap<>();
+	private static Map<Integer, Clues> unfilteredClueCache = new HashMap<>();
 
 	public static void rebuildFilteredCluesCache()
 	{
-		cachedFilteredClues = createFilteredCluesCache();
+		List<ClueTier> enabledClueTiers = getEnabledClueTiers();
+
+		List<Clues> enabledClues = Clues.CLUES.stream()
+				.filter(c -> enabledClueTiers.contains(c.getClueTier()))
+				.collect(Collectors.toList());
+
+		itemIdClueCache = enabledClues
+				.stream()
+				.collect(Collectors.groupingBy(Clues::getItemID));
+
+		clueIdClueCache = enabledClues
+				.stream()
+				.collect(Collectors.toMap(Clues::getClueID, clue -> clue));
+
+		unfilteredClueCache = Clues.CLUES
+				.stream()
+				.collect(Collectors.toMap(Clues::getClueID, clue -> clue));
 	}
 
-	private static List<Clues> createFilteredCluesCache()
+	private static List<ClueTier> getEnabledClueTiers()
 	{
 		if (config == null)
 		{
-			return Clues.CLUES;
+			return Arrays.asList(ClueTier.values());
 		}
 
 		List<ClueTier> enabledClues = new ArrayList<>();
@@ -1111,50 +1133,27 @@ public class Clues
 		}
 		if (config.masterDetails()) enabledClues.add(ClueTier.MASTER);
 
-		return Clues.CLUES.stream()
-				.filter(c -> enabledClues.contains(c.getClueTier()))
-				.collect(Collectors.toList());
-	}
-
-	public static List<Clues> filteredClues()
-	{
-		return cachedFilteredClues;
+		return enabledClues;
 	}
 
 	public static Clues forItemId(int itemId)
 	{
-		for (Clues clue : filteredClues())
+		Clues clue = clueIdClueCache.get(itemId);
+		if (clue != null && clue.clueID == -1)
 		{
-			if (clue.clueID == -1 && clue.getItemID() == itemId)
-			{
-				return clue;
-			}
+			return clue;
 		}
 		return null;
 	}
 
 	public static Clues forClueId(int clueId)
 	{
-		for (Clues clue : CLUES)
-		{
-			if (clue.getClueID() == clueId)
-			{
-				return clue;
-			}
-		}
-		return null;
+		return unfilteredClueCache.get(clueId);
 	}
 
 	public static Clues forClueIdFiltered(int clueId)
 	{
-		for (Clues clue : filteredClues())
-		{
-			if (clue.getClueID() == clueId)
-			{
-				return clue;
-			}
-		}
-		return null;
+		return clueIdClueCache.get(clueId);
 	}
 
 	public Integer getClueID()
@@ -1170,7 +1169,7 @@ public class Clues
 	{
 		final String text = Text.sanitizeMultilineText(rawText).toLowerCase();
 
-		for (Clues clue : filteredClues())
+		for (Clues clue : clueIdClueCache.values())
 		{
 			if (text.equalsIgnoreCase(clue.getClueText()))
 			{
@@ -1183,14 +1182,10 @@ public class Clues
 
 	public static Integer forInterfaceIdGetId(int interfaceId)
 	{
-		// Only check beginner map clues
-		for (int i = 21; i < 26; i++)
+		List<Clues> clues = itemIdClueCache.get(interfaceId);
+		if (!clues.isEmpty())
 		{
-			List<Clues> filteredClues = filteredClues();
-			if (filteredClues.get(i).getItemID() == interfaceId)
-			{
-				return filteredClues.get(i).getClueID();
-			}
+			return clues.get(0).clueID;
 		}
 		return null;
 	}
@@ -1223,7 +1218,7 @@ public class Clues
 
 	public static boolean isClue(int itemId, boolean isDeveloperMode)
 	{
-		return filteredClues().stream().anyMatch((clue) -> clue.getItemID() == itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
+		return itemIdClueCache.containsKey(itemId) || (isDeveloperMode && DEV_MODE_IDS.contains(itemId));
 	}
 
 	public static boolean isBeginnerOrMasterClue(int itemId, boolean isDeveloperMode)
