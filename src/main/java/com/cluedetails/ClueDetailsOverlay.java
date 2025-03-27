@@ -177,6 +177,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 
 	private void showMenuItem()
 	{
+		if (!(config.showHoverText() && !config.changeClueText())) return;
 		Menu menu = client.getMenu();
 		MenuEntry[] currentMenuEntries = menu.getMenuEntries();
 
@@ -188,47 +189,36 @@ public class ClueDetailsOverlay extends OverlayPanel
 			return;
 		}
 
-		List<MenuEntryAndPos> entriesByTile = getEntriesByTile(currentMenuEntries);
-
-		if (config.showHoverText() && !config.changeClueText())
-		{
-			addTooltip(entriesByTile);
-		}
+		addTooltip(getEntriesByTile(currentMenuEntries));
 	}
 
 	// Using onClientTick for compatability with Ground Items "Collapse ground item menu"
 	@Subscribe
 	public void onClientTick(ClientTick event)
 	{
-		final MenuEntry[] menuEntries = client.getMenuEntries();
+		if (!(config.changeClueText() || config.colorChangeClueText())) return;
+		final MenuEntry[] menuEntries = client.getMenu().getMenuEntries();
+
 		if (Arrays.stream(menuEntries).noneMatch(this::isTakeClue))
 		{
 			return;
 		}
 
-		List<MenuEntryAndPos> entriesByTile = getEntriesByTile(menuEntries);
-
-		if (config.changeClueText() || config.colorChangeClueText())
-		{
-			changeGroundItemMenu(entriesByTile);
-		}
+		changeGroundItemMenu(getEntriesByTile(menuEntries));
 	}
 
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
 	{
+		if (!config.changeClueText()) return;
+
 		MenuEntry[] entries = event.getMenuEntries();
 		if (Arrays.stream(entries).noneMatch(this::isTakeClue))
 		{
 			return;
 		}
 
-		List<MenuEntryAndPos> entriesByTile = getEntriesByTile(entries);
-
-		if (config.changeClueText())
-		{
-			addClueSubmenus(entriesByTile);
-		}
+		addClueSubmenus(getEntriesByTile(entries));
 	}
 
 	private void changeGroundItemMenu(List<MenuEntryAndPos> entriesByTile)
@@ -238,7 +228,6 @@ public class ClueDetailsOverlay extends OverlayPanel
 		{
 			MenuEntry menuEntry = entryAndPos.getMenuEntry();
 			if (!isTakeOrMarkClue(menuEntry)) continue;
-
 			boolean showColor = shouldShowColor(menuEntry);
 			String regex = "(Clue scroll \\(.*?\\)( x [0-9]+)?|Challenge scroll \\(.*?\\)( x [0-9]+)?)";
 			if (clueDetailsPlugin.isDeveloperMode())
@@ -391,7 +380,7 @@ public class ClueDetailsOverlay extends OverlayPanel
 			LocalPoint itemLp = new LocalPoint(x, y, wv);
 			WorldPoint itemWp = WorldPoint.fromLocal(client, itemLp);
 			int currentPosForTile = foundPosForWp.getOrDefault(itemWp, 0);
-			if (Clues.isTrackedClueOrTornClue(menuEntries[i].getIdentifier(), clueDetailsPlugin.isDeveloperMode()))
+			if (Clues.isClue(menuEntries[i].getIdentifier(), clueDetailsPlugin.isDeveloperMode()))
 			{
 				mappedEntries.add(new MenuEntryAndPos(menuEntries[i], menuEntries.length - i - 1, currentPosForTile));
 				if (isTakeClue(menuEntries[i])) foundPosForWp.put(itemWp, currentPosForTile + 1);
@@ -463,29 +452,11 @@ public class ClueDetailsOverlay extends OverlayPanel
 	private String getText(MenuEntryAndPos menuEntryAndPos, boolean showColor, boolean isFloorText)
 	{
 		MenuEntry menuEntry = menuEntryAndPos.getMenuEntry();
-		int scrollID = getScrollID(menuEntry);
-
-		Clues matchingClue = Clues.forItemId(scrollID);
-		if (matchingClue != null)
-		{
-			String text = matchingClue.getDetail(configManager);
-			if (showColor)
-			{
-				Color color = matchingClue.getDetailColor(configManager);
-
-				// Only change floor text color if it's not the default
-				if (!(isFloorText && color == Color.WHITE))
-				{
-					String hexColor = Integer.toHexString(color.getRGB()).substring(2);
-					return "<col=" + hexColor + ">" + text;
-				}
-			}
-			return text;
-		}
 
 		if (isReadClue(menuEntry))
 		{
-			ClueInstance clueInstance = clueInventoryManager.getTrackedClueByClueItemId(scrollID);
+			int scrollID = getScrollID(menuEntry);
+			ClueInstance clueInstance = clueInventoryManager.getClueByClueItemId(scrollID);
 			if (clueInstance != null && !clueInstance.getClueIds().isEmpty())
 			{
 				return clueInstance.getCombinedClueText(clueDetailsPlugin, configManager, showColor, isFloorText);
@@ -534,9 +505,8 @@ public class ClueDetailsOverlay extends OverlayPanel
 		int wv = menuEntry.getWorldViewId();
 		LocalPoint itemLp = new LocalPoint(sceneX * SCENE_TO_LOCAL, sceneY * SCENE_TO_LOCAL, wv);
 		WorldPoint itemWp = WorldPoint.fromLocalInstance(client, itemLp);
-		List<ClueInstance> trackedClues = clueGroundManager.getGroundClues().get(itemWp);
-		if (trackedClues == null) return null;
-		if (trackedClues.size() <= entry.getPosOnTile()) return trackedClues.get(entry.getPosOnTile() - 1);
+		List<ClueInstance> trackedClues = new ArrayList<>(clueGroundManager.getAllGroundCluesOnWp(itemWp));
+		if (trackedClues.size() <= entry.getPosOnTile()) return null;
 		return trackedClues.get(entry.getPosOnTile());
 	}
 

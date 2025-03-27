@@ -28,6 +28,8 @@ import com.cluedetails.filters.ClueTier;
 import java.awt.Color;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,10 +43,16 @@ import org.apache.commons.text.WordUtils;
 @Data
 public class ClueInstance
 {
+	private static final AtomicLong sequenceGenerator = new AtomicLong();
+
 	@Setter
 	private List<Integer> clueIds; // Fake ID from ClueText
 	private final int itemId; // Clue item ID
 	private final WorldPoint location; // Null if in inventory
+
+	@Getter
+	@Setter
+	private long sequenceNumber;
 
 	@Getter
 	private final Integer timeToDespawnFromDataInTicks;
@@ -60,6 +68,8 @@ public class ClueInstance
 		// Ticks go forward even when logged into other game modes. For simplicity we assume when
 		// Loaded we just are starting from the exact same despawn time remaining.
 		this.timeToDespawnFromDataInTicks = data.getDespawnTick();
+
+		this.sequenceNumber = sequenceGenerator.getAndIncrement();
 	}
 
 	// Constructor for inventory clues from inventory changed event
@@ -69,6 +79,8 @@ public class ClueInstance
 		this.itemId = itemId;
 		this.location = null;
 		this.timeToDespawnFromDataInTicks = -1;
+
+		this.sequenceNumber = sequenceGenerator.getAndIncrement();
 	}
 
 	// Constructor for ground clues
@@ -79,11 +91,13 @@ public class ClueInstance
 		this.location = location;
 		this.tileItem = tileItem;
 		this.timeToDespawnFromDataInTicks = currentTick;
+
+		this.sequenceNumber = sequenceGenerator.getAndIncrement();
 	}
 
 	public List<Integer> getClueIds()
 	{
-		if (clueIds.isEmpty() && !(itemId == ItemID.CLUE_SCROLL_BEGINNER || itemId == ItemID.CLUE_SCROLL_MASTER))
+		if (clueIds.isEmpty() && !Clues.isBeginnerOrMasterClue(itemId, true))
 		{
 			return Collections.singletonList(itemId);
 		}
@@ -109,7 +123,7 @@ public class ClueInstance
 		}
 		return clue.getClueTier();
 	}
-	
+
 	public String getGroundText(ClueDetailsPlugin plugin, ClueDetailsConfig config, ConfigManager configManager, int quantity)
 	{
 		StringBuilder itemStringBuilder = new StringBuilder();
@@ -243,7 +257,7 @@ public class ClueInstance
 
 	public boolean isEnabled(ClueDetailsConfig config)
 	{
-		if (itemId == ItemID.CLUE_SCROLL_BEGINNER)
+		if (itemId == ItemID.CLUE_SCROLL_BEGINNER || Clues.DEV_MODE_IDS.contains(itemId))
 		{
 			return config.beginnerDetails();
 		}
@@ -268,5 +282,46 @@ public class ClueInstance
 			return config.masterDetails();
 		}
 		else return getTier() != null;
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (!(o instanceof ClueInstance)) return false;
+		ClueInstance clueInstance = (ClueInstance) o;
+
+		int diff1;
+		int diff2;
+		if (tileItem != null && clueInstance.tileItem != null)
+		{
+			diff1 = tileItem.getDespawnTime();
+			diff2 = clueInstance.tileItem.getDespawnTime();
+		}
+		else if (tileItem == null && clueInstance.tileItem == null)
+		{
+			diff1 = getDespawnTick(ClueDetailsPlugin.getCurrentTick());
+			diff2 = clueInstance.getDespawnTick(ClueDetailsPlugin.getCurrentTick());
+		}
+		else
+		{
+			return false;
+		}
+		// Should this really be considering it equal without consideration for the clueIds?
+		return itemId == clueInstance.itemId && diff1 == diff2 && location.equals(clueInstance.location);
+	}
+
+	@Override
+	public int hashCode()
+	{
+		int despawnTime = getDespawnTick(ClueDetailsPlugin.getCurrentTick());
+		return Objects.hash(itemId, despawnTime, location);
+	}
+
+	@Override
+	public String toString()
+	{
+		int despawnTime = getDespawnTick(ClueDetailsPlugin.getCurrentTick());
+		return "ClueInstance{" + "itemId=" + itemId + ", despawnTick=" + despawnTime + ", worldPoint=" + location + ", orderId=" + sequenceNumber + "}";
 	}
 }

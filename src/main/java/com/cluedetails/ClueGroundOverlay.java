@@ -28,7 +28,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -100,15 +102,15 @@ public class ClueGroundOverlay extends Overlay
 		offsetMap.clear();
 		final LocalPoint localLocation = player.getLocalLocation();
 
-		if (clueGroundManager.getGroundClues().keySet().isEmpty())
+		if (clueGroundManager.getTrackedWorldPoints().isEmpty())
 		{
 			return null;
 		}
 
-		for (WorldPoint wp : clueGroundManager.getGroundClues().keySet())
+		for (WorldPoint wp : clueGroundManager.getTrackedWorldPoints())
 		{
 			// Check if wp in clueGroundManager is within range of the player
-			final LocalPoint groundPoint = LocalPoint.fromWorld(client, wp);
+			final LocalPoint groundPoint = LocalPoint.fromWorld(client.getTopLevelWorldView(), wp);
 
 			if (groundPoint == null || localLocation.distanceTo(groundPoint) > MAX_DISTANCE)
 			{
@@ -123,7 +125,8 @@ public class ClueGroundOverlay extends Overlay
 				continue;
 			}
 
-			for (Map.Entry<ClueInstance, Integer> entry : clueInstancesWithQuantityAtWp.entrySet())
+			List<Map.Entry<ClueInstance, Integer>> entrySet = new ArrayList<>(clueInstancesWithQuantityAtWp.entrySet());
+			for (Map.Entry<ClueInstance, Integer> entry : entrySet)
 			{
 				ClueInstance item = entry.getKey();
 
