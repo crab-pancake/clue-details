@@ -28,6 +28,8 @@ import com.cluedetails.panels.ClueDetailsParentPanel;
 
 import java.util.*;
 import javax.inject.Singleton;
+
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -60,6 +62,9 @@ public class ClueInventoryManager
 	private final Map<Integer, ClueInstance> cluesInInventory = new HashMap<>();
 	private final Map<Integer, ClueInstance> previousCluesInInventory = new HashMap<>();
 
+	@Getter
+	private long lastInventoryUpdate = 0;
+
 	// To be initialized to avoid passing around
 	@Setter
 	public static ClueDetailsConfig config;
@@ -73,6 +78,11 @@ public class ClueInventoryManager
 		this.clueGroundManager = clueGroundManager;
 		this.clueBankManager = clueBankManager;
 		this.chatboxPanelManager = chatboxPanelManager;
+	}
+
+	public void updateLastInventoryRefreshTime()
+	{
+		this.lastInventoryUpdate = System.currentTimeMillis();
 	}
 
 	public void updateInventory(ItemContainer inventoryContainer)
@@ -108,6 +118,8 @@ public class ClueInventoryManager
 				}
 			}
 		}
+
+		clueDetailsPlugin.getClueInventoryManager().updateLastInventoryRefreshTime();
 	}
 
 	private void checkItemAsClueInstance(int itemId)
@@ -179,6 +191,7 @@ public class ClueInventoryManager
 			if (clueInfo == null) continue;
 			if (!Objects.equals(clueInfo.getItemID(), itemID)) continue;
 			clueInstance.setClueIds(clueIds);
+			clueDetailsPlugin.getClueInventoryManager().updateLastInventoryRefreshTime();
 			break;
 		}
 	}
@@ -195,6 +208,7 @@ public class ClueInventoryManager
 		ClueInstance beginnerClueInInv = cluesInInventory.get(ItemID.CLUE_SCROLL_BEGINNER);
 		if (beginnerClueInInv == null) return;
 		beginnerClueInInv.setClueIds(clueIds);
+		clueDetailsPlugin.getClueInventoryManager().updateLastInventoryRefreshTime();
 	}
 
 	public Set<Integer> getCluesInInventory()
@@ -442,6 +456,7 @@ public class ClueInventoryManager
 			if (clue == null) return;
 			clue.setClueIds(List.of());
 			clueDetailsPlugin.getItemsOverlay().invalidateCache();
+			clueDetailsPlugin.getClueInventoryManager().updateLastInventoryRefreshTime();
 		}
 		else if (isNewMasterClue(chatDialogClueItemWidget)
 			|| (isUriMasterClue(headModelWidget) && isUriStandardDialogue(npcChatWidget)))
@@ -450,6 +465,7 @@ public class ClueInventoryManager
 			if (clue == null) return;
 			clue.setClueIds(List.of());
 			clueDetailsPlugin.getItemsOverlay().invalidateCache();
+			clueDetailsPlugin.getClueInventoryManager().updateLastInventoryRefreshTime();
 		}
 	}
 

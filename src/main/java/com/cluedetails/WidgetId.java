@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Zoinkwiz <https://www.github.com/Zoinkwiz>
+ * Copyright (c) 2025, cubeee <https://www.github.com/cubeee>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,34 +24,20 @@
  */
 package com.cluedetails;
 
-import java.awt.Color;
-import java.util.List;
 import lombok.Data;
+import lombok.Getter;
 
+@Getter
 @Data
-public class ClueIdToDetails
+public class WidgetId
 {
-	int id;
-	String text;
-	Color color;
-	List<Integer> itemIds;
-	List<WidgetId> widgetIds;
 
-	public ClueIdToDetails(int id, String text, Color color, List<Integer> itemIds, List<WidgetId> widgetIds)
-	{
-		this.id = id;
-		this.text = text;
-		this.color = color;
-		this.itemIds = itemIds;
-		this.widgetIds = widgetIds;
-	}
+    private final int componentId;
+    private final Integer childIndex;
 
-	public static boolean equalRGB(Color color1, Color color2)
-	{
-		boolean equalRed = color1.getRed() == color2.getRed();
-		boolean equalGreen = color1.getGreen() == color2.getGreen();
-		boolean equalBlue = color1.getBlue() == color2.getBlue();
-
-		return equalRed && equalGreen && equalBlue;
-	}
+    public WidgetId(int componentId, Integer childIndex)
+    {
+        this.componentId = componentId;
+        this.childIndex = childIndex;
+    }
 }

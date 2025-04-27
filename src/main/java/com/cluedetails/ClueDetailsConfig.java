@@ -41,6 +41,7 @@ public interface ClueDetailsConfig extends Config
 {
 	String GROUP = "clue-details";
 	String CLUE_ITEMS_CONFIG = "clue-details-items";
+	String CLUE_WIDGETS_CONFIG = "clue-details-widgets";
 
 	enum ClueOrdering implements Comparator<Clues>
 	{
@@ -409,6 +410,19 @@ public interface ClueDetailsConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "highlightInventoryClueWidgets",
+		name = "Highlight clue widgets",
+		description = "Toggle whether to highlight widgets configured for each clue in your inventory." +
+			"<br>Opacity will always be used from 'Clue widgets color'",
+		section = overlaysSection,
+		position = 8
+	)
+	default boolean highlightInventoryClueWidgets()
+	{
+		return true;
+	}
+
 	@ConfigSection(name = "Overlay Colors", description = "Options that effect overlay colors", position = 5)
 	String overlayColorsSection = "Overlay Colors";
 
@@ -486,12 +500,38 @@ public interface ClueDetailsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "colorInventoryClueWidgets",
+		name = "Color clue widgets",
+		description = "Toggle whether apply clue details color to clue widgets",
+		section = overlayColorsSection,
+		position = 6
+	)
+	default boolean colorInventoryClueWidgets()
+	{
+		return true;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "widgetHighlightColor",
+		name = "Clue widgets color",
+		description = "Clue widgets color used when \"Color clue widgets\" is toggled on",
+		section = overlayColorsSection,
+		position = 7
+	)
+	default Color widgetHighlightColor()
+	{
+		Color baseColor = Color.YELLOW.darker();
+		return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), 128);
+	}
+
+	@ConfigItem(
 		keyName = "colorGroundItems",
 		name = "Overwrite Ground Items colors",
 		description = "When updating clue details colors, apply the color to the Ground Items plugin" +
 			"<br>Does apply to Beginner and Master clues. Set color to #FFFFFF to reset.",
 		section = overlayColorsSection,
-		position = 7
+		position = 9
 	)
 	default boolean colorGroundItems()
 	{
@@ -504,7 +544,7 @@ public interface ClueDetailsConfig extends Config
 		description = "When updating clue details colors, apply the color to the Inventory Tags plugin" +
 			"<br>Does apply to Beginner and Master clues. Set color to #FFFFFF to reset.",
 		section = overlayColorsSection,
-		position = 6
+		position = 8
 	)
 	default boolean colorInventoryTags()
 	{

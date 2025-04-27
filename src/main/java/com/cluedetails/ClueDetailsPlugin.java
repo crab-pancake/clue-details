@@ -28,11 +28,9 @@ import com.cluedetails.panels.ClueDetailsParentPanel;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.TimerTask;
 import java.util.TreeMap;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -42,6 +40,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
 import net.runelite.api.ItemID;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameStateChanged;
@@ -113,6 +112,10 @@ public class ClueDetailsPlugin extends Plugin
 	@Inject
 	private ClueDetailsItemsOverlay itemsOverlay;
 
+	@Getter
+	@Inject
+	private ClueDetailsWidgetsOverlay widgetsOverlay;
+
 	@Inject
 	private ClueThreeStepSaverWidgetOverlay clueThreeStepSaverWidgetOverlay;
 
@@ -148,10 +151,14 @@ public class ClueDetailsPlugin extends Plugin
 	private ClueInventoryManager clueInventoryManager;
 
 	@Getter
+	private ClueWidgetManager clueWidgetManager;
+
+	@Getter
 	private ClueGroundManager clueGroundManager;
 
 	private ClueBankManager clueBankManager;
 
+	@Getter
 	private CluePreferenceManager cluePreferenceManager;
 
 	@Inject
@@ -199,6 +206,7 @@ public class ClueDetailsPlugin extends Plugin
 		eventBus.register(groundOverlay);
 
 		overlayManager.add(tagsOverlay);
+		overlayManager.add(widgetsOverlay);
 
 		overlayManager.add(inventoryOverlay);
 		eventBus.register(inventoryOverlay);
@@ -211,11 +219,13 @@ public class ClueDetailsPlugin extends Plugin
 		Clues.setConfig(config);
 		Clues.rebuildFilteredCluesCache();
 		ClueInventoryManager.setConfig(config);
+		ClueWidgetManager.setConfig(config);
 
 		cluePreferenceManager = new CluePreferenceManager(this, configManager);
 		clueGroundManager = new ClueGroundManager(client, configManager, this);
 		clueBankManager = new ClueBankManager(client, configManager, gson);
 		clueInventoryManager = new ClueInventoryManager(client, configManager, this, clueGroundManager, clueBankManager, chatboxPanelManager);
+		clueWidgetManager = new ClueWidgetManager(client, configManager, clueInventoryManager, cluePreferenceManager);
 		clueBankManager.startUp(clueInventoryManager);
 		clueThreeStepSaver.startUp(clueInventoryManager);
 
@@ -223,6 +233,7 @@ public class ClueDetailsPlugin extends Plugin
 		groundOverlay.startUp(clueGroundManager, clueThreeStepSaver);
 		inventoryOverlay.setClueInventoryManager(clueInventoryManager);
 		itemsOverlay.setClueInventoryManager(clueInventoryManager);
+		widgetsOverlay.startUp(clueInventoryManager, cluePreferenceManager);
 		clueThreeStepSaverWidgetOverlay.setClueThreeStepSaver(clueThreeStepSaver);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/icon.png");
@@ -257,6 +268,8 @@ public class ClueDetailsPlugin extends Plugin
 
 		overlayManager.remove(itemsOverlay);
 		eventBus.unregister(itemsOverlay);
+
+		overlayManager.remove(widgetsOverlay);
 
 		overlayManager.remove(clueThreeStepSaverWidgetOverlay);
 
@@ -417,6 +430,13 @@ public class ClueDetailsPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onMenuOpened(MenuOpened event)
+	{
+		MenuEntry[] entries = event.getMenuEntries();
+		clueWidgetManager.addHighlightWidgetSubmenus(entries);
+	}
+
+	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
 		if (event.getGroup().equals("clue-details-highlights"))
@@ -432,6 +452,7 @@ public class ClueDetailsPlugin extends Plugin
 			|| event.getKey().equals("masterDetails"))
 		{
 			Clues.rebuildFilteredCluesCache();
+			clueInventoryManager.updateLastInventoryRefreshTime();
 		}
 
 		if (event.getGroup().equals("clue-details-color")
@@ -441,6 +462,15 @@ public class ClueDetailsPlugin extends Plugin
 			|| event.getKey().equals("colorInventoryClueItems"))
 		{
 			itemsOverlay.invalidateCache();
+		}
+
+		if (event.getGroup().equals(config.CLUE_WIDGETS_CONFIG)
+			|| event.getKey().equals("highlightInventoryClueWidgets")
+			|| event.getKey().equals("widgetHighlightColor")
+			|| event.getKey().equals("colorInventoryClueWidgets")
+			|| event.getGroup().equals("clue-details-color"))
+		{
+			clueInventoryManager.updateLastInventoryRefreshTime();
 		}
 
 		if (!event.getGroup().equals(ClueDetailsConfig.class.getAnnotation(ConfigGroup.class).value()))

@@ -25,8 +25,12 @@
 package com.cluedetails;
 
 import static com.cluedetails.ClueDetailsConfig.CLUE_ITEMS_CONFIG;
+import static com.cluedetails.ClueDetailsConfig.CLUE_WIDGETS_CONFIG;
+
 import com.google.gson.reflect.TypeToken;
 import java.util.List;
+import java.util.stream.*;
+
 import net.runelite.client.config.ConfigManager;
 
 public class CluePreferenceManager
@@ -79,6 +83,41 @@ public class CluePreferenceManager
 		{
 			String clueItemIdsJson = clueDetailsPlugin.gson.toJson(newItems);
 			configManager.setConfiguration(CLUE_ITEMS_CONFIG, String.valueOf(clueID), clueItemIdsJson);
+		}
+	}
+
+	public boolean widgetsPreferenceContainsWidget(int clueID, WidgetId widgetId)
+	{
+		List<WidgetId> clueWidgetIds = getWidgetsPreference(clueID);
+
+		if (clueWidgetIds != null)
+		{
+			return clueWidgetIds.contains(widgetId);
+		}
+		return false;
+	}
+
+	public List<WidgetId> getWidgetsPreference(int clueID)
+	{
+		String clueWidgets = configManager.getConfiguration(CLUE_WIDGETS_CONFIG, String.valueOf(clueID));
+
+		return clueDetailsPlugin.gson.fromJson(clueWidgets, new TypeToken<List<WidgetId>>(){}.getType());
+	}
+
+	public void saveWidgetsPreference(int clueID, List<WidgetId> newWidgets)
+	{
+		if (newWidgets.isEmpty())
+		{
+			configManager.unsetConfiguration(CLUE_WIDGETS_CONFIG, String.valueOf(clueID));
+		}
+		else
+		{
+			List<WidgetId> mappedWidgetIds = newWidgets
+				.stream()
+				.map(w -> new WidgetId(w.getComponentId(), w.getChildIndex() == null || w.getChildIndex() == -1 ? null : w.getChildIndex()))
+				.collect(Collectors.toList());
+			String clueWidgetIdsJson = clueDetailsPlugin.gson.toJson(mappedWidgetIds);
+			configManager.setConfiguration(CLUE_WIDGETS_CONFIG, String.valueOf(clueID), clueWidgetIdsJson);
 		}
 	}
 }

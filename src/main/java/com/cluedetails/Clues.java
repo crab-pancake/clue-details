@@ -25,6 +25,8 @@
 package com.cluedetails;
 
 import static com.cluedetails.ClueDetailsConfig.CLUE_ITEMS_CONFIG;
+import static com.cluedetails.ClueDetailsConfig.CLUE_WIDGETS_CONFIG;
+
 import com.cluedetails.filters.ClueTier;
 import com.cluedetails.filters.OrRequirement;
 import com.google.common.collect.ImmutableList;
