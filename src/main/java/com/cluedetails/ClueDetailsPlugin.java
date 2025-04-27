@@ -278,10 +278,7 @@ public class ClueDetailsPlugin extends Plugin
 		clueGroundManager.saveStateToConfig();
 		clueBankManager.saveStateToConfig();
 
-		for (ClueGroundTimer timer : clueGroundTimers)
-		{
-			infoBoxManager.removeInfoBox(timer);
-		}
+		resetClueGroundTimers();
 	}
 
 	@Subscribe
@@ -493,12 +490,7 @@ public class ClueDetailsPlugin extends Plugin
 		// Reset clueGroundTimers when showGroundClueTimers toggled off
 		if ("showGroundClueTimers".equals(event.getKey()) && "false".equals(event.getNewValue()))
 		{
-			// Reset timers
-			for (ClueGroundTimer timer : clueGroundTimers)
-			{
-				infoBoxManager.removeInfoBox(timer);
-			}
-			clueGroundTimers.clear();
+			resetClueGroundTimers();
 		}
 
 		panel.refresh();
@@ -582,5 +574,14 @@ public class ClueDetailsPlugin extends Plugin
 				}
 			}
 		}
+	}
+
+	private void resetClueGroundTimers()
+	{
+		for (ClueGroundTimer timer : clueGroundTimers)
+		{
+			infoBoxManager.removeInfoBox(timer);
+		}
+		clueGroundTimers.clear();
 	}
 }
