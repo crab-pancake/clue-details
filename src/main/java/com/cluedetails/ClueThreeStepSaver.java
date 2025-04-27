@@ -1,6 +1,7 @@
 package com.cluedetails;
 
 import com.google.gson.Gson;
+import javax.inject.Singleton;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
@@ -15,9 +16,9 @@ import net.runelite.client.config.ConfigManager;
 import javax.inject.Inject;
 
 @Slf4j
+@Singleton
 public class ClueThreeStepSaver
 {
-
 	@Inject
 	private Client client;
 
@@ -30,6 +31,7 @@ public class ClueThreeStepSaver
 	@Inject
 	private Gson gson;
 
+	@Inject
 	private ClueInventoryManager cim;
 
 	private ClueInstance activeMaster;
@@ -134,9 +136,8 @@ public class ClueThreeStepSaver
 		savedThreeStepper = gson.fromJson(threeStepMasterJson, ClueInstance.class);
 	}
 
-	public void startUp(ClueInventoryManager clueInventoryManager)
+	public void startUp()
 	{
-		this.cim = clueInventoryManager;
 		updateThreeStepper();
 		scanInventory();
 	}
