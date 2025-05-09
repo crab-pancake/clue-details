@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.Getter;
+import lombok.Setter;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ItemDespawned;
@@ -51,6 +52,8 @@ public class ClueGroundManager
 	private Zone lastZone;
 	private Zone currentZone;
 	private final WorldPointToClueInstances trackedClues;
+
+	@Setter
 	private boolean loggedInStateOccuredThisTick;
 	private final Set<WorldPoint> tileClearedThisTick = new HashSet<>();
 	private final Set<Tile> easyToEliteClueSpawnedThisTick = new HashSet<>();
@@ -61,9 +64,20 @@ public class ClueGroundManager
 		this.client = client;
 		this.clueDetailsPlugin = clueDetailsPlugin;
 		this.clueGroundSaveDataManager = clueGroundSaveDataManager;
-		clueGroundSaveDataManager.loadStateFromConfig(client);
 
 		trackedClues = new WorldPointToClueInstances(client, clueDetailsPlugin);
+	}
+
+	public void startUp()
+	{
+		loadStateFromConfig();
+		setLoggedInStateOccuredThisTick(true);
+	}
+
+	public void shutDown()
+	{
+		// Need to clear incase the player toggles the plugin on/off on the same tick
+		tileClearedThisTick.clear();
 	}
 
 	public SortedSet<ClueInstance> getAllGroundCluesOnWp(WorldPoint worldPoint)
