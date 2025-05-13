@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.Getter;
-import lombok.Setter;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
 
 import java.util.*;
+import net.runelite.api.gameval.ItemID;
 
 @Singleton
 public class ClueGroundManager
@@ -53,10 +53,7 @@ public class ClueGroundManager
 	private Zone currentZone;
 	private final WorldPointToClueInstances trackedClues;
 
-	@Setter
-	private boolean loggedInStateOccuredThisTick;
-	private final Set<WorldPoint> tileClearedThisTick = new HashSet<>();
-	private final Set<Tile> easyToEliteClueSpawnedThisTick = new HashSet<>();
+	private final Set<Tile> resetEasyToEliteThisTick = new HashSet<>();
 
 	@Inject
 	public ClueGroundManager(Client client, ClueGroundSaveDataManager clueGroundSaveDataManager, ClueDetailsPlugin clueDetailsPlugin)
@@ -71,13 +68,12 @@ public class ClueGroundManager
 	public void startUp()
 	{
 		loadStateFromConfig();
-		setLoggedInStateOccuredThisTick(true);
 	}
 
 	public void shutDown()
 	{
 		// Need to clear incase the player toggles the plugin on/off on the same tick
-		tileClearedThisTick.clear();
+		resetEasyToEliteThisTick.clear();
 	}
 
 	public SortedSet<ClueInstance> getAllGroundCluesOnWp(WorldPoint worldPoint)
@@ -93,18 +89,9 @@ public class ClueGroundManager
 		if (!Clues.isClue(item.getId(), clueDetailsPlugin.isDeveloperMode())) return;
 
 		// If easy-elite task, we just override
-		// TODO: Maybe also means torn clues and such?
 		if (!Clues.isBeginnerOrMasterClue(item.getId(), clueDetailsPlugin.isDeveloperMode()))
 		{
-			// We don't get items removed when a loading->logged in state occurs. This clears the tile
-			if (loggedInStateOccuredThisTick && !tileClearedThisTick.contains(tile.getWorldLocation()))
-			{
-				tileClearedThisTick.add(tile.getWorldLocation());
-				clearEasyToEliteCluesAtWorldPoint(tile.getWorldLocation());
-			}
-			ClueInstance clueInstance = new ClueInstance(List.of(), item.getId(), tile.getWorldLocation(), item, client.getTickCount());
-			trackedClues.addClue(clueInstance);
-			easyToEliteClueSpawnedThisTick.add(tile);
+			resetEasyToEliteThisTick.add(tile);
 			return;
 		}
 
@@ -140,8 +127,8 @@ public class ClueGroundManager
 
 		// Only process events where the actual item has just despawned
 		// This helps to retain identified clues
-		if (event.getItem().getId() == ItemID.CLUE_SCROLL_BEGINNER
-			|| event.getItem().getId() == ItemID.CLUE_SCROLL_MASTER)
+		if (event.getItem().getId() == ItemID.TRAIL_CLUE_BEGINNER
+			|| event.getItem().getId() == ItemID.TRAIL_CLUE_MASTER)
 		{
 			if (ClueDetailsPlugin.getCurrentPlane() != location.getPlane()) return;
 		}
@@ -204,8 +191,6 @@ public class ClueGroundManager
 
 	public void onGameTick()
 	{
-		loggedInStateOccuredThisTick = false;
-		tileClearedThisTick.clear();
 		currentZone = new Zone(client.getLocalPlayer().getWorldLocation());
 		trackedClues.clearEmptyTiles(currentZone);
 
@@ -215,35 +200,46 @@ public class ClueGroundManager
 		}
 		itemHasSpawnedOnTileThisTick.clear();
 		trackedClues.removeDespawnedClues();
-		sortClues();
+		resetEasyToEliteThisTick.forEach(this::createEasyToEliteForTile);
+		resetEasyToEliteThisTick.clear();
 
 		lastZone = currentZone;
 	}
 
-	private void sortClues()
+	private void createEasyToEliteForTile(Tile tile)
 	{
-		for (Tile tile : easyToEliteClueSpawnedThisTick)
+
+		List<TileItem> items = getClueItemsAtTile(tile);
+		if (items == null) return;
+
+		clearEasyToEliteCluesAtWorldPoint(tile.getWorldLocation());
+
+		for (TileItem item : items)
 		{
-			List<TileItem> tileItems = getClueItemsAtTile(tile);
-			SortedSet<ClueInstance> cluesAtWp = trackedClues.getAllCluesAtWorldPoint(tile.getWorldLocation());
-			for (int i=0; i<tileItems.size(); i++)
+			if (Clues.isClue(item.getId(), clueDetailsPlugin.isDeveloperMode()) && !Clues.isBeginnerOrMasterClue(item.getId(), clueDetailsPlugin.isDeveloperMode()))
 			{
-				TileItem tileItem = tileItems.get(i);
-				int finalI = i + 1;
-				cluesAtWp.stream()
-					.filter((clueInstance -> clueInstance.getTileItem() == tileItem))
-					.findFirst()
-					.ifPresent((clueInstance -> clueInstance.setSequenceNumber(finalI)));
-			}
-			List<ClueInstance> clues = new ArrayList<>(cluesAtWp);
-			for (ClueInstance clueInstance : clues)
-			{
-				// Re-sorts the order of clues
-				trackedClues.removeClue(clueInstance);
+				ClueInstance clueInstance = new ClueInstance(List.of(), item.getId(), tile.getWorldLocation(), item, client.getTickCount());
 				trackedClues.addClue(clueInstance);
 			}
 		}
-		easyToEliteClueSpawnedThisTick.clear();
+
+		SortedSet<ClueInstance> cluesAtWp = trackedClues.getAllCluesAtWorldPoint(tile.getWorldLocation());
+		for (int i = 0; i < items.size(); i++)
+		{
+			TileItem tileItem = items.get(i);
+			int finalI = i + 1;
+			cluesAtWp.stream()
+				.filter((clueInstance -> clueInstance.getTileItem() == tileItem))
+				.findFirst()
+				.ifPresent((clueInstance -> clueInstance.setSequenceNumber(finalI)));
+		}
+		List<ClueInstance> clues = new ArrayList<>(cluesAtWp);
+		for (ClueInstance clueInstance : clues)
+		{
+			// Re-sorts the order of clues
+			trackedClues.removeClue(clueInstance);
+			trackedClues.addClue(clueInstance);
+		}
 	}
 
 	private void checkClueThroughRelativeDespawnTimers(Tile tile)
@@ -508,11 +504,6 @@ public class ClueGroundManager
 	public void clearEasyToEliteCluesAtWorldPoint(WorldPoint wp)
 	{
 		trackedClues.clearEasyToEliteCluesAtWorldPoint(wp);
-	}
-
-	public void setLoggedInOccuredThisTick(boolean loggedIn)
-	{
-		loggedInStateOccuredThisTick = loggedIn;
 	}
 
 	public void saveStateToConfig()
