@@ -497,6 +497,13 @@ public class ClueDetailsPlugin extends Plugin
 			return;
 		}
 
+		if ("groundClueTimersDecreaseIdleTimeout".equals(event.getKey())){
+			String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
+			if (minutes_config != null){
+				client.setIdleTimeout(50 * 60 * Integer.parseInt(minutes_config));
+			}
+		}
+
 		if ("showSidebar".equals(event.getKey()))
 		{
 			if ("true".equals(event.getNewValue()))
