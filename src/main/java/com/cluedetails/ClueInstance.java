@@ -54,9 +54,9 @@ public class ClueInstance
 	@Setter
 	private long sequenceNumber;
 
-	@Getter
-	private final Integer timeToDespawnFromDataInTicks;
+	private Integer timeToDespawnFromDataInTicks;
 	private TileItem tileItem;
+	private boolean isNewClue;
 
 	// Constructor for clues from config
 	public ClueInstance(ClueInstanceData data)
@@ -90,7 +90,20 @@ public class ClueInstance
 		this.itemId = itemId;
 		this.location = location;
 		this.tileItem = tileItem;
-		this.timeToDespawnFromDataInTicks = currentTick;
+		this.timeToDespawnFromDataInTicks = tileItem.getDespawnTime();
+
+		this.sequenceNumber = sequenceGenerator.getAndIncrement();
+	}
+
+	// New clue on floor
+	public ClueInstance(List<Integer> clueIds, int itemId, WorldPoint location, TileItem tileItem, boolean isNewClue)
+	{
+		this.clueIds = clueIds;
+		this.itemId = itemId;
+		this.location = location;
+		this.tileItem = tileItem;
+		this.timeToDespawnFromDataInTicks = tileItem.getDespawnTime() - 2;
+		this.isNewClue = isNewClue;
 
 		this.sequenceNumber = sequenceGenerator.getAndIncrement();
 	}
@@ -144,7 +157,14 @@ public class ClueInstance
 
 		if (clueIds.isEmpty())
 		{
-			clueText = WordUtils.capitalizeFully(this.getTier().toString().replace("_", " "));
+			if (this.getTier() == null)
+			{
+				clueText = "";
+			}
+			else
+			{
+				clueText = WordUtils.capitalizeFully(this.getTier().toString().replace("_", " "));
+			}
 		}
 		else
 		{
@@ -206,6 +226,14 @@ public class ClueInstance
 		return color;
 	}
 
+	public void updateDespawnTick()
+	{
+		if (tileItem != null)
+		{
+			this.timeToDespawnFromDataInTicks = tileItem.getDespawnTime();
+		}
+	}
+
 	public int getDespawnTick()
 	{
 		if (tileItem != null)
@@ -219,10 +247,6 @@ public class ClueInstance
 	// For tiles we've not seen this session, all items on it should have no TileItem, and thus we'll keep the same consistent tick diff
 	public int getTicksToDespawnConsideringTileItem(int currentTick)
 	{
-		if (tileItem != null)
-		{
-			return tileItem.getDespawnTime() - currentTick;
-		}
 		return timeToDespawnFromDataInTicks == null ? -1 : timeToDespawnFromDataInTicks;
 	}
 
