@@ -344,7 +344,7 @@ public class ClueDetailsPlugin extends Plugin
 	{
 		if (e.isFocused())
 		{
-			String minutes_config = configManager.getConfiguration(ClueDetailsConfig.CLUE_LOGOUT_CONFIG, "idleTimeout");
+			String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
 			int minutes_parsed = 25;
 			if (minutes_config != null)
 			{
@@ -527,7 +527,7 @@ public class ClueDetailsPlugin extends Plugin
 
 		if ("groundClueTimersDecreaseIdleTimeout".equals(event.getKey()))
 		{
-			String minutes_config = configManager.getConfiguration(ClueDetailsConfig.CLUE_LOGOUT_CONFIG, "idleTimeout");
+			String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
 
 			if (minutes_config != null)
 			{
