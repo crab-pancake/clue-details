@@ -340,11 +340,14 @@ public class ClueDetailsPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onFocusChanged(FocusChanged e){
-		if (e.isFocused()){
-			String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
+	public void onFocusChanged(FocusChanged e)
+	{
+		if (e.isFocused())
+		{
+			String minutes_config = configManager.getConfiguration(ClueDetailsConfig.CLUE_LOGOUT_CONFIG, "idleTimeout");
 			int minutes_parsed = 25;
-			if (minutes_config != null){
+			if (minutes_config != null)
+			{
 				minutes_parsed = Integer.parseInt(minutes_config);
 			}
 			client.setIdleTimeout(50 * 60 * minutes_parsed);
@@ -425,8 +428,9 @@ public class ClueDetailsPlugin extends Plugin
 					if (!timer.isNotified() && timer.shouldNotify() && !timer.isRenotifying())
 					{
 						notifier.notify("Your clue scroll is about to disappear!");
-						if (config.decreaseIdleTimeout()){
-							client.setIdleTimeout(1);  // client forces this to be minimum 5 minutes
+						if (config.decreaseIdleTimeout())
+						{
+							client.setIdleTimeout(1); // client forces this to be minimum 5 minutes
 						}
 						if (config.groundClueTimersRenotificationTime() != 0)
 						{
@@ -521,9 +525,12 @@ public class ClueDetailsPlugin extends Plugin
 			return;
 		}
 
-		if ("groundClueTimersDecreaseIdleTimeout".equals(event.getKey())){
-			String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
-			if (minutes_config != null){
+		if ("groundClueTimersDecreaseIdleTimeout".equals(event.getKey()))
+		{
+			String minutes_config = configManager.getConfiguration(ClueDetailsConfig.CLUE_LOGOUT_CONFIG, "idleTimeout");
+
+			if (minutes_config != null)
+			{
 				client.setIdleTimeout(50 * 60 * Integer.parseInt(minutes_config));
 			}
 		}
