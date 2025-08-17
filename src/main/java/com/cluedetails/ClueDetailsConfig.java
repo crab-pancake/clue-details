@@ -679,9 +679,10 @@ public interface ClueDetailsConfig extends Config
 
 	@ConfigItem(
 		keyName = "groundClueTimersDecreaseIdleTimeout",
-		name = "Decrease logout idle timer when notification fires",
-		description = "Lowers idle timer when clue despawn notification happens. " +
-			"<br> Recommend setting notification time to 5 minutes or higher.",
+		name = "Lower idle logout on notification",
+		description = "Lowers idle logout timer when ground clue despawn notification happens." +
+			"<br> Minimum is 5 minutes: recommend 'Timer notifications' set to 300 or higher." +
+			"<br> Uses Logout Timer plugin config when resetting idle timer.",
 		section = groundCluesSection,
 		position = 10
 	)
