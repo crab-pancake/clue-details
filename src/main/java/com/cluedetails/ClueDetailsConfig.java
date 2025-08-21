@@ -667,7 +667,7 @@ public interface ClueDetailsConfig extends Config
 	@ConfigItem(
 		keyName = "groundClueTimersRenotificationTime",
 		name = "Timer renotifications",
-		description = "Seconds after initial notificiaton to periodically renotify. Set to 0 to disable the notification." +
+		description = "Seconds after initial notification to periodically renotify. Set to 0 to disable the notification." +
 			"<br> This also acts as a cooldown between notifications for clues in the same tile",
 		section = groundCluesSection,
 		position = 9
@@ -675,6 +675,20 @@ public interface ClueDetailsConfig extends Config
 	default int groundClueTimersRenotificationTime()
 	{
 		return 0;
+	}
+
+	@ConfigItem(
+		keyName = "groundClueTimersDecreaseIdleTimeout",
+		name = "Lower idle logout on notification",
+		description = "Lowers idle logout timer when ground clue despawn notification happens." +
+			"<br> Minimum is 5 minutes: recommend 'Timer notifications' set to 300 or higher." +
+			"<br> Uses Logout Timer plugin config when resetting idle timer.",
+		section = groundCluesSection,
+		position = 10
+	)
+	default boolean decreaseIdleTimeout()
+	{
+		return false;
 	}
 
 	@ConfigSection(name = "Tier Toggles", description = "Options to enable particular clue tiers", position = 7)
