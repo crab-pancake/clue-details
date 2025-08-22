@@ -251,6 +251,13 @@ public class ClueDetailsPlugin extends Plugin
 		{
 			infoBoxManager.removeInfoBox(timer);
 		}
+		String minutes_config = configManager.getConfiguration("logouttimer", "idleTimeout");
+		int minutes_parsed = 25;
+		if (minutes_config != null)
+		{
+			minutes_parsed = Integer.parseInt(minutes_config);
+		}
+		client.setIdleTimeout(50 * 60 * minutes_parsed);
 	}
 
 	private void startUpOverlays()
